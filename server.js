@@ -66,15 +66,117 @@ function getCitations(interaction) {
 /* =========================
    LIVE RESEARCH
 ========================= */
-
-app.post("/api/research", async (req, res) => {
+app.post("/api/extract-post", async (req, res) => {
   try {
-    const {
-      claim = "",
-      url = "",
-      decision = "",
-      reasoning = []
-    } = req.body;
+    const { url = "" } = req.body;
+
+    if (!url.trim()) {
+      return res.status(400).json({
+        error: "Please provide a public post URL."
+      });
+    }
+
+    const prompt = `
+You are the TruthQuest post extraction assistant.
+
+The user supplied this public URL:
+
+${url}
+
+Your job is to identify the actual social-media post associated
+with this URL.
+
+Use the URL Context tool to inspect the page and Google Search
+when necessary to locate the publicly indexed version of the post.
+
+Return ONLY valid JSON:
+
+{
+  "platform": "",
+  "author": "",
+  "handle": "",
+  "date": "",
+  "text": "",
+  "headline": "",
+  "image": "",
+  "likes": "",
+  "comments": "",
+  "shares": "",
+  "source": "",
+  "url": "${url}",
+  "accessible": true,
+  "message": ""
+}
+
+Rules:
+
+1. Never invent post text.
+2. Never invent engagement numbers.
+3. Never invent dates.
+4. Never invent an image URL.
+5. If the exact post cannot be accessed, set accessible to false.
+6. If the page contains the actual post text, copy the relevant
+   post text into "text".
+7. Put the main claim into "headline".
+8. If no separate headline exists, derive it only from the
+   actual post text.
+9. If information is unavailable, use an empty string.
+10. Return JSON only.
+`;
+
+    const interaction = await ai.interactions.create({
+      model: "gemini-3.6-flash",
+      input: prompt,
+      tools: [
+        { type: "url_context" },
+        { type: "google_search" }
+      ]
+    });
+
+    let output = interaction.output_text || "";
+
+    output = output
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    let post;
+
+    try {
+      post = JSON.parse(output);
+    } catch {
+      console.error("Invalid extraction response:", output);
+
+      return res.status(500).json({
+        error: "Gemini returned an invalid post response."
+      });
+    }
+
+    if (!post.accessible || !post.text) {
+      return res.status(422).json({
+        success: false,
+        accessible: false,
+        error:
+          post.message ||
+          "TruthQuest could not retrieve the actual post content from this URL."
+      });
+    }
+
+    res.json({
+      success: true,
+      post
+    });
+
+  } catch (error) {
+    console.error("Extraction error:", error);
+
+    res.status(500).json({
+      success: false,
+      error:
+        "TruthQuest could not retrieve this post."
+    });
+  }
+});
 
     if (!claim && !url) {
       return res.status(400).json({
