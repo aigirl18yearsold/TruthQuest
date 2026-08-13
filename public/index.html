@@ -138,6 +138,184 @@
 >
 
   <div class="step">
+    STEP 1 • LOAD A POST
+  </div>
+
+  <h2>
+    What did you find online?
+  </h2>
+
+  <p class="muted">
+    Paste a public social-media post URL and
+    TruthQuest will load the information available
+    from the post.
+  </p>
+
+  <div class="card">
+
+    <label>
+      Public post URL
+    </label>
+
+    <div class="url-row">
+
+      <input
+        id="postUrl"
+        type="url"
+        placeholder="https://..."
+      >
+
+      <button
+        class="primary load-button"
+        onclick="loadPost()"
+      >
+        Load Post
+      </button>
+
+    </div>
+
+    <div
+      id="postLoading"
+      class="loading"
+      hidden
+    >
+      🔎 Loading post...
+    </div>
+
+  </div>
+
+
+  <!-- GENERATED POST -->
+
+  <div
+    id="postPreview"
+    class="social-post"
+    hidden
+  >
+
+    <div class="post-header">
+
+      <div class="avatar">
+        TQ
+      </div>
+
+      <div>
+
+        <strong id="postAuthor">
+          Source
+        </strong>
+
+        <span id="postHandle">
+          @source
+        </span>
+
+        <small id="postDate">
+          Date unavailable
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="postImageContainer"
+      class="post-image-container"
+      hidden
+    >
+
+      <img
+        id="postImage"
+        alt="Post image"
+      >
+
+    </div>
+
+
+    <div
+      id="postText"
+      class="post-text"
+    ></div>
+
+
+    <div class="post-meta">
+
+      <span>
+        ❤️ <b id="postLikes">—</b>
+      </span>
+
+      <span>
+        💬 <b id="postComments">—</b>
+      </span>
+
+      <span>
+        ↗ <b id="postShares">—</b>
+      </span>
+
+    </div>
+
+
+    <div class="post-source">
+
+      Source:
+      <span id="postSource">
+        —
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <!-- DECISION -->
+
+  <div
+    id="decisionArea"
+    hidden
+  >
+
+    <h3 class="decision-title">
+      What do you think?
+    </h3>
+
+    <div class="choices">
+
+      <button
+        class="choice"
+        onclick="selectDecision('trust', this)"
+      >
+        ✓ Trust
+      </button>
+
+      <button
+        class="choice selected"
+        onclick="selectDecision('investigate', this)"
+      >
+        ⌕ Investigate
+      </button>
+
+      <button
+        class="choice"
+        onclick="selectDecision('dont-trust', this)"
+      >
+        ! Don't Trust
+      </button>
+
+    </div>
+
+    <button
+      class="primary"
+      onclick="showScreen('investigation')"
+    >
+      Continue Investigation →
+    </button>
+
+  </div>
+
+</section>
+>
+
+  <div class="step">
 
     STEP 1 • CHOOSE A CLAIM
 
