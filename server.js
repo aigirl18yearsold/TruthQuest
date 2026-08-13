@@ -153,3 +153,91 @@ app.listen(PORT, () => {
     `TruthQuest running on port ${PORT}`
   );
 });
+app.post("/api/extract-post", async (req, res) => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({
+        error: "Please provide a public post URL."
+      });
+    }
+
+    const prompt = `
+You are TruthQuest's social-post extraction assistant.
+
+Analyze this PUBLIC URL:
+
+${url}
+
+Extract ONLY information that is actually available from the page.
+
+Return ONLY valid JSON in this exact structure:
+
+{
+  "platform": "",
+  "author": "",
+  "handle": "",
+  "date": "",
+  "text": "",
+  "image": "",
+  "likes": "",
+  "comments": "",
+  "shares": "",
+  "source": "",
+  "url": ""
+}
+
+Rules:
+- Never invent information.
+- If something cannot be found, use an empty string.
+- Keep the post text exactly as available, without adding your own claims.
+- For image, return a publicly accessible image URL only if one is actually available.
+- The source should be the publication/account name when available.
+- Return JSON only.
+`;
+
+    const interaction = await ai.interactions.create({
+      model: "gemini-3.6-flash",
+      input: prompt,
+      tools: [
+        {
+          type: "url_context"
+        },
+        {
+          type: "google_search"
+        }
+      ]
+    });
+
+    let text = interaction.output_text || "";
+
+    // Remove accidental markdown code fences.
+    text = text
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    let post;
+
+    try {
+      post = JSON.parse(text);
+    } catch {
+      return res.status(500).json({
+        error: "The post could not be extracted as structured data."
+      });
+    }
+
+    res.json({
+      success: true,
+      post
+    });
+
+  } catch (error) {
+    console.error("Post extraction error:", error);
+
+    res.status(500).json({
+      error: "TruthQuest couldn't load this post."
+    });
+  }
+});
