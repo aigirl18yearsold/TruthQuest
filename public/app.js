@@ -229,3 +229,167 @@ function escapeAttribute(value) {
   return escapeHTML(value);
 
 }
+async function loadPost() {
+
+  const url =
+    document
+      .getElementById("postUrl")
+      .value
+      .trim();
+
+  const loading =
+    document.getElementById("postLoading");
+
+  const preview =
+    document.getElementById("postPreview");
+
+  const decisionArea =
+    document.getElementById("decisionArea");
+
+
+  if (!url) {
+
+    alert("Paste a public post URL first.");
+
+    return;
+
+  }
+
+
+  loading.hidden = false;
+
+  preview.hidden = true;
+
+  decisionArea.hidden = true;
+
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/extract-post",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+            url
+          })
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Could not load the post."
+      );
+
+    }
+
+
+    const post = data.post;
+
+
+    document
+      .getElementById("postAuthor")
+      .textContent =
+      post.author || "Unknown source";
+
+
+    document
+      .getElementById("postHandle")
+      .textContent =
+      post.handle || "";
+
+
+    document
+      .getElementById("postDate")
+      .textContent =
+      post.date || "Date unavailable";
+
+
+    document
+      .getElementById("postText")
+      .textContent =
+      post.text ||
+      "Post text could not be extracted.";
+
+
+    document
+      .getElementById("postLikes")
+      .textContent =
+      post.likes || "—";
+
+
+    document
+      .getElementById("postComments")
+      .textContent =
+      post.comments || "—";
+
+
+    document
+      .getElementById("postShares")
+      .textContent =
+      post.shares || "—";
+
+
+    document
+      .getElementById("postSource")
+      .textContent =
+      post.source ||
+      post.platform ||
+      "Unknown";
+
+
+    const imageContainer =
+      document
+        .getElementById(
+          "postImageContainer"
+        );
+
+    const image =
+      document
+        .getElementById("postImage");
+
+
+    if (post.image) {
+
+      image.src = post.image;
+
+      imageContainer.hidden = false;
+
+    } else {
+
+      image.removeAttribute("src");
+
+      imageContainer.hidden = true;
+
+    }
+
+
+    preview.hidden = false;
+
+    decisionArea.hidden = false;
+
+
+  } catch (error) {
+
+    alert(error.message);
+
+  } finally {
+
+    loading.hidden = true;
+
+  }
+
+}
