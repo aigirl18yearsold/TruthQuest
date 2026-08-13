@@ -20,7 +20,6 @@ Your job is to help users investigate online claims.
 Do NOT simply answer TRUE or FALSE.
 
 Instead:
-
 1. Research the claim using current web information.
 2. Prefer primary and authoritative sources.
 3. Look for independent confirmation.
@@ -63,27 +62,21 @@ function getCitations(interaction) {
   ].slice(0, 8);
 }
 
+
+/* =========================
+   LIVE RESEARCH
+========================= */
+
 app.post("/api/research", async (req, res) => {
   try {
     const {
-      const claim =
-  document
-    .getElementById("claim")
-    .value
-    .trim();
+      claim = "",
+      url = "",
+      decision = "",
+      reasoning = []
+    } = req.body;
 
-const url =
-  document
-    .getElementById("postUrl")
-    .value
-    .trim();
-
-if (!claim && !url) {
-  alert("Please provide a claim or URL.");
-  return;
-}
-
-     {
+    if (!claim && !url) {
       return res.status(400).json({
         error: "Please provide a claim or URL."
       });
@@ -91,21 +84,31 @@ if (!claim && !url) {
 
     const prompt = `
 User decision:
-${decision}
+${decision || "Not provided"}
 
 User reasoning:
-${reasoning.join(", ") || "No reasoning selected"}
+${
+  Array.isArray(reasoning)
+    ? reasoning.join(", ")
+    : reasoning || "No reasoning selected"
+}
 
 Claim:
-${claim || "Extract the relevant claim from the URL."}
+${claim || "No claim was manually provided."}
 
 Public URL:
 ${url || "None"}
 
-Investigate this claim using current information.
+IMPORTANT:
+
+If a public URL is provided and no claim was manually entered,
+use the URL as the starting point for the investigation.
+
+Investigate the claim using current information.
+
+Do not invent information.
 
 Return:
-
 - verdict
 - confidence
 - coach feedback
@@ -142,7 +145,7 @@ Return:
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Research error:", error);
 
     res.status(500).json({
       error:
@@ -151,39 +154,35 @@ Return:
   }
 });
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "online",
-    geminiConfigured:
-      Boolean(process.env.GEMINI_API_KEY)
-  });
-});
 
-app.listen(PORT, () => {
-  console.log(
-    `TruthQuest running on port ${PORT}`
-  );
-});
+/* =========================
+   EXTRACT POST FROM URL
+========================= */
+
 app.post("/api/extract-post", async (req, res) => {
   try {
-    const { url } = req.body;
+    const { url = "" } = req.body;
 
-    if (!url) {
+    if (!url.trim()) {
       return res.status(400).json({
         error: "Please provide a public post URL."
       });
     }
 
     const prompt = `
-You are TruthQuest's social-post extraction assistant.
+You are the TruthQuest social-post extraction assistant.
 
-Analyze this PUBLIC URL:
+Analyze this publicly accessible URL:
 
 ${url}
 
-Extract ONLY information that is actually available from the page.
+Your first task is to determine what information about the
+linked page/post is actually accessible.
 
-Return ONLY valid JSON in this exact structure:
+Extract ONLY information that can be supported by the page
+or reliable information retrieved about that page.
+
+Return ONLY valid JSON in exactly this structure:
 
 {
   "platform": "",
@@ -191,20 +190,29 @@ Return ONLY valid JSON in this exact structure:
   "handle": "",
   "date": "",
   "text": "",
+  "headline": "",
   "image": "",
   "likes": "",
   "comments": "",
   "shares": "",
   "source": "",
-  "url": ""
+  "url": "${url}"
 }
 
 Rules:
-- Never invent information.
-- If something cannot be found, use an empty string.
-- Keep the post text exactly as available, without adding your own claims.
-- For image, return a publicly accessible image URL only if one is actually available.
-- The source should be the publication/account name when available.
+
+- NEVER invent post text.
+- NEVER invent an author.
+- NEVER invent engagement numbers.
+- NEVER invent a date.
+- NEVER invent an image URL.
+- If information is unavailable, return an empty string.
+- "text" should contain the actual publicly accessible post text.
+- "headline" should contain the main claim/headline if one is clearly present.
+- If there is no separate headline, use the main claim from the post text.
+- Keep the meaning and wording of the actual post.
+- Identify the social platform when possible.
+- If the URL requires login or cannot be accessed, make the unavailable fields empty.
 - Return JSON only.
 `;
 
@@ -223,7 +231,6 @@ Rules:
 
     let text = interaction.output_text || "";
 
-    // Remove accidental markdown code fences.
     text = text
       .replace(/```json/gi, "")
       .replace(/```/g, "")
@@ -233,9 +240,15 @@ Rules:
 
     try {
       post = JSON.parse(text);
-    } catch {
+    } catch (parseError) {
+      console.error(
+        "Post extraction JSON error:",
+        parseError
+      );
+
       return res.status(500).json({
-        error: "The post could not be extracted as structured data."
+        error:
+          "TruthQuest received an invalid response while extracting the post."
       });
     }
 
@@ -245,10 +258,38 @@ Rules:
     });
 
   } catch (error) {
-    console.error("Post extraction error:", error);
+    console.error(
+      "Post extraction error:",
+      error
+    );
 
     res.status(500).json({
-      error: "TruthQuest couldn't load this post."
+      error:
+        "TruthQuest couldn't load this post. The page may be private or inaccessible."
     });
   }
+});
+
+
+/* =========================
+   HEALTH CHECK
+========================= */
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "online",
+    geminiConfigured:
+      Boolean(process.env.GEMINI_API_KEY)
+  });
+});
+
+
+/* =========================
+   START SERVER
+========================= */
+
+app.listen(PORT, () => {
+  console.log(
+    `TruthQuest running on port ${PORT}`
+  );
 });
