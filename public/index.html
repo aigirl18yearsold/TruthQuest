@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="TruthQuest — AI-powered media literacy"
+  >
+
+  <title>
+    TruthQuest
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+</head>
+
+<body>
+
+<header>
+
+  <button
+    class="logo"
+    onclick="showScreen('home')"
+  >
+
+    <span>TQ</span>
+
+    TruthQuest
+
+  </button>
+
+  <div class="live-status">
+
+    ● LIVE RESEARCH
+
+  </div>
+
+</header>
+
+
+<main>
+
+
+<!-- HOME -->
+
+<section
+  id="home"
+  class="screen active"
+>
+
+  <div class="eyebrow">
+
+    AI-POWERED MEDIA LITERACY
+
+  </div>
+
+  <h1>
+
+    Don't just scroll.<br>
+
+    <em>Question what you see.</em>
+
+  </h1>
+
+  <p class="lead">
+
+    Investigate online claims using
+    real-time web research and learn
+    why the evidence matters.
+
+  </p>
+
+  <button
+    class="primary"
+    onclick="showScreen('challenge')"
+  >
+
+    Start Challenge →
+
+  </button>
+
+
+  <div class="feature-row">
+
+    <div>
+
+      <b>01</b>
+
+      <span>
+        Live research
+      </span>
+
+    </div>
+
+    <div>
+
+      <b>02</b>
+
+      <span>
+        Evidence
+      </span>
+
+    </div>
+
+    <div>
+
+      <b>03</b>
+
+      <span>
+        AI coaching
+      </span>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- CHALLENGE -->
+
+<section
+  id="challenge"
+  class="screen"
+>
+
+  <div class="step">
+
+    STEP 1 • CHOOSE A CLAIM
+
+  </div>
+
+  <h2>
+
+    What do you want to investigate?
+
+  </h2>
+
+  <p class="muted">
+
+    Paste a public social-media URL
+    or enter a claim.
+
+  </p>
+
+
+  <div class="card">
+
+    <label>
+
+      Public post URL
+
+      <small>
+        optional
+      </small>
+
+    </label>
+
+    <input
+      id="postUrl"
+      type="url"
+      placeholder="https://..."
+    >
+
+
+    <label>
+
+      Claim / headline
+
+    </label>
+
+    <textarea
+      id="claim"
+      rows="5"
+    >Scientists prove that students who use their phones for 10 minutes before an exam score 50% higher!</textarea>
+
+
+    <div class="choices">
+
+      <button
+        class="choice selected"
+        onclick="selectDecision('investigate', this)"
+      >
+
+        ⌕ Investigate
+
+      </button>
+
+      <button
+        class="choice"
+        onclick="selectDecision('trust', this)"
+      >
+
+        ✓ Trust
+
+      </button>
+
+      <button
+        class="choice"
+        onclick="selectDecision('dont-trust', this)"
+      >
+
+        ! Don't Trust
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <button
+    class="primary"
+    onclick="showScreen('investigation')"
+  >
+
+    Investigate →
+
+  </button>
+
+</section>
+
+
+
+<!-- INVESTIGATION -->
+
+<section
+  id="investigation"
+  class="screen"
+>
+
+  <div class="step">
+
+    STEP 2 • INVESTIGATE
+
+  </div>
+
+  <h2>
+
+    Build your evidence trail.
+
+  </h2>
+
+  <p class="muted">
+
+    Think like a fact-checker before
+    asking the AI Coach.
+
+  </p>
+
+
+  <div class="checks">
+
+    <button>
+      <b>01</b>
+      Who published it?
+      <small>
+        Source credibility
+      </small>
+    </button>
+
+    <button>
+      <b>02</b>
+      Is there an original source?
+      <small>
+        Study or report
+      </small>
+    </button>
+
+    <button>
+      <b>03</b>
+      Is evidence provided?
+      <small>
+        Data and context
+      </small>
+    </button>
+
+    <button>
+      <b>04</b>
+      Is the statistic supported?
+      <small>
+        Check the numbers
+      </small>
+    </button>
+
+    <button>
+      <b>05</b>
+      Is the language manipulative?
+      <small>
+        Emotion and urgency
+      </small>
+    </button>
+
+    <button>
+      <b>06</b>
+      Can independent sources confirm it?
+      <small>
+        Compare sources
+      </small>
+    </button>
+
+  </div>
+
+
+  <button
+    class="primary"
+    onclick="showScreen('reasoning')"
+  >
+
+    I've investigated →
+
+  </button>
+
+</section>
+
+
+
+<!-- REASONING -->
+
+<section
+  id="reasoning"
+  class="screen"
+>
+
+  <div class="step">
+
+    STEP 3 • YOUR REASONING
+
+  </div>
+
+  <h2>
+
+    Why did you make that decision?
+
+  </h2>
+
+  <p class="muted">
+
+    Your reasoning helps the AI Coach
+    personalize its feedback.
+
+  </p>
+
+
+  <div class="reasons">
+
+    <label>
+
+      <input
+        type="checkbox"
+        value="source"
+      >
+
+      The source is unclear.
+
+    </label>
+
+
+    <label>
+
+      <input
+        type="checkbox"
+        value="study"
+      >
+
+      No original study is provided.
+
+    </label>
+
+
+    <label>
+
+      <input
+        type="checkbox"
+        value="exaggerated"
+      >
+
+      The claim seems exaggerated.
+
+    </label>
+
+
+    <label>
+
+      <input
+        type="checkbox"
+        value="emotion"
+      >
+
+      The language is emotionally manipulative.
+
+    </label>
+
+
+    <label>
+
+      <input
+        type="checkbox"
+        value="evidence"
+      >
+
+      I need more evidence.
+
+    </label>
+
+  </div>
+
+
+  <button
+    class="primary"
+    onclick="runResearch()"
+  >
+
+    ✦ Ask AI Coach to Research →
+
+  </button>
+
+
+  <div
+    id="loading"
+    class="loading"
+    hidden
+  >
+
+    🔎 Researching current sources...
+
+  </div>
+
+</section>
+
+
+
+<!-- AI COACH -->
+
+<section
+  id="coach"
+  class="screen"
+>
+
+  <div class="step">
+
+    AI COACH
+
+  </div>
+
+  <h2>
+
+    Here's what the evidence says.
+
+  </h2>
+
+
+  <div
+    id="coachResult"
+    class="coach card"
+  >
+
+  </div>
+
+
+  <button
+    class="primary"
+    onclick="showScreen('results')"
+  >
+
+    See Results →
+
+  </button>
+
+</section>
+
+
+
+<!-- RESULTS -->
+
+<section
+  id="results"
+  class="screen"
+>
+
+  <div class="step">
+
+    CHALLENGE COMPLETE
+
+  </div>
+
+  <h2>
+
+    Good investigation.
+
+  </h2>
+
+
+  <div class="score">
+
+    82
+
+    <small>
+      /100
+    </small>
+
+  </div>
+
+
+  <div class="metrics">
+
+    <div>
+
+      Source Checking
+
+      <b>85%</b>
+
+    </div>
+
+    <div>
+
+      Evidence Evaluation
+
+      <b>80%</b>
+
+    </div>
+
+    <div>
+
+      Manipulation Detection
+
+      <b>81%</b>
+
+    </div>
+
+  </div>
+
+
+  <button
+    class="primary"
+    onclick="showScreen('challenge')"
+  >
+
+    Investigate Another Claim →
+
+  </button>
+
+</section>
+
+
+</main>
+
+
+<footer>
+
+  TruthQuest • Think · Investigate · Decide
+
+</footer>
+
+
+<script src="app.js"></script>
+
+</body>
+
+  </html>
