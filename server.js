@@ -66,13 +66,24 @@ function getCitations(interaction) {
 app.post("/api/research", async (req, res) => {
   try {
     const {
-      claim,
-      url,
-      reasoning = [],
-      decision = "investigate"
-    } = req.body;
+      const claim =
+  document
+    .getElementById("claim")
+    .value
+    .trim();
 
-    if (!claim && !url) {
+const url =
+  document
+    .getElementById("postUrl")
+    .value
+    .trim();
+
+if (!claim && !url) {
+  alert("Please provide a claim or URL.");
+  return;
+}
+
+     {
       return res.status(400).json({
         error: "Please provide a claim or URL."
       });
