@@ -7,7 +7,7 @@ import { DEMO_CHAT_REPLIES } from "../../data/demoFixtures.js";
 
 const MAX_FILES = 3;
 
-export default function Coach({ post, analysis, demoMode, demoReason, history, setHistory, onContinue }) {
+export default function Coach({ post, analysis, demoMode, history, setHistory, onContinue }) {
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState([]);
   const [sending, setSending] = useState(false);
@@ -64,8 +64,9 @@ export default function Coach({ post, analysis, demoMode, demoReason, history, s
         setHistory((h) => [...h, { role: "assistant", text: res.reply, sources: res.sources || [] }]);
       }
     } catch (e) {
+      console.error("Chat message failed:", e);
       setHistory((h) => [...h, { role: "assistant", text: "I couldn't reach the AI backend just now — try again in a moment.", sources: [] }]);
-      setError(e.message);
+      setError("Message couldn't be sent. Please try again.");
     } finally {
       setSending(false);
     }
@@ -74,22 +75,22 @@ export default function Coach({ post, analysis, demoMode, demoReason, history, s
   return (
     <div className="flex flex-col h-full">
       <div className="px-5 pt-1 pb-2 flex items-center gap-2">
-        <div className="flex items-center justify-center rounded-full w-[30px] h-[30px] bg-amber shrink-0">
-          <Sparkles size={15} className="text-ink" />
+        <div className="flex items-center justify-center rounded-full w-[38px] h-[38px] bg-amber shrink-0">
+          <Sparkles size={19} className="text-ink" />
         </div>
         <div>
-          <p className="font-body font-bold text-[13px] text-paper leading-tight">AI Coach</p>
-          <p className="font-mono text-[9.5px] text-slate-light">grounded with live search</p>
+          <p className="font-body font-bold text-[16px] text-paper leading-tight">Scout</p>
+          <p className="font-mono text-[12px] text-slate-light">your investigation coach · live search</p>
         </div>
       </div>
 
-      {demoMode && <DemoBanner reason={demoReason || "simulated coach replies"} />}
+      {demoMode && <DemoBanner />}
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 flex flex-col gap-3 pb-2">
         {history.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[14.5px] leading-relaxed ${
                 m.role === "user" ? "bg-amber text-ink rounded-br-sm" : "bg-ink-soft text-paper border border-ink-line rounded-bl-sm"
               }`}
             >
@@ -97,8 +98,8 @@ export default function Coach({ post, analysis, demoMode, demoReason, history, s
               {m.files?.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {m.files.map((f, fi) => (
-                    <span key={fi} className="flex items-center gap-1 font-mono text-[9.5px] bg-black/10 rounded px-1.5 py-0.5">
-                      {f.mimeType?.startsWith("image/") ? <ImageIcon size={10} /> : <FileText size={10} />} {f.name}
+                    <span key={fi} className="flex items-center gap-1 font-mono text-[10.5px] bg-black/10 rounded px-1.5 py-0.5">
+                      {f.mimeType?.startsWith("image/") ? <ImageIcon size={11} /> : <FileText size={11} />} {f.name}
                     </span>
                   ))}
                 </div>
@@ -106,7 +107,7 @@ export default function Coach({ post, analysis, demoMode, demoReason, history, s
               {m.sources?.length > 0 && (
                 <div className="mt-2 flex flex-col gap-1 border-t border-ink-line/50 pt-1.5">
                   {m.sources.map((s, si) => (
-                    <a key={si} href={s.url} target="_blank" rel="noreferrer" className="font-mono text-[9.5px] text-teal hover:underline truncate">
+                    <a key={si} href={s.url} target="_blank" rel="noreferrer" className="font-mono text-[10.5px] text-teal hover:underline truncate">
                       ↳ {s.title || s.url}
                     </a>
                   ))}
@@ -126,15 +127,15 @@ export default function Coach({ post, analysis, demoMode, demoReason, history, s
         )}
       </div>
 
-      {error && <p className="px-5 pb-1 font-mono text-[10px] text-red">{error}</p>}
+      {error && <p className="px-5 pb-1 font-mono text-[11px] text-red">{error}</p>}
 
       {pendingFiles.length > 0 && (
         <div className="px-5 pb-2 flex flex-wrap gap-1.5">
           {pendingFiles.map((f, i) => (
-            <span key={i} className="flex items-center gap-1 font-mono text-[10px] bg-ink-soft border border-ink-line rounded-full pl-2 pr-1 py-1 text-slate-light">
-              {f.mimeType?.startsWith("image/") ? <ImageIcon size={11} /> : <FileText size={11} />} {f.name}
+            <span key={i} className="flex items-center gap-1 font-mono text-[11px] bg-ink-soft border border-ink-line rounded-full pl-2 pr-1 py-1 text-slate-light">
+              {f.mimeType?.startsWith("image/") ? <ImageIcon size={12} /> : <FileText size={12} />} {f.name}
               <button onClick={() => setPendingFiles((p) => p.filter((_, pi) => pi !== i))} className="hover:text-red">
-                <X size={11} />
+                <X size={12} />
               </button>
             </span>
           ))}
@@ -148,21 +149,21 @@ export default function Coach({ post, analysis, demoMode, demoReason, history, s
           disabled={pendingFiles.length >= MAX_FILES}
           className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-ink-soft border border-ink-line text-slate-light hover:text-amber disabled:opacity-40"
         >
-          <Paperclip size={15} />
+          <Paperclip size={17} />
         </button>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
           placeholder="Ask the coach anything…"
-          className="flex-1 rounded-full bg-ink-soft border border-ink-line px-4 py-2.5 text-[13px] text-paper placeholder:text-slate-light outline-none focus:border-amber"
+          className="flex-1 rounded-full bg-ink-soft border border-ink-line px-4 py-2.5 text-[14.5px] text-paper placeholder:text-slate-light outline-none focus:border-amber"
         />
         <button
           onClick={send}
           disabled={sending || (!input.trim() && pendingFiles.length === 0)}
           className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-amber text-ink disabled:opacity-40"
         >
-          <ArrowUp size={16} strokeWidth={2.5} />
+          <ArrowUp size={18} strokeWidth={2.5} />
         </button>
       </div>
 
