@@ -38,7 +38,25 @@ export async function groundedGenerate({ systemInstruction, contents, json = fal
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`Gemini API error (${res.status}): ${detail.slice(0, 300)}`);
+    let message = `Gemini API error (${res.status}).`;
+    try {
+      const parsed = JSON.parse(detail);
+      const apiMessage = parsed?.error?.message || "";
+      if (res.status === 429) {
+        message = "Gemini's free-tier quota is used up for now — wait a bit and try again, or enable billing in Google AI Studio for a higher limit.";
+      } else if (res.status === 404) {
+        message = "The configured Gemini model isn't available. Check GEMINI_MODEL in your environment variables.";
+      } else if (res.status === 401 || res.status === 403) {
+        message = "Gemini rejected the API key. Check GEMINI_API_KEY is set correctly.";
+      } else if (apiMessage) {
+        message = `Gemini API error: ${apiMessage.split("\n")[0].slice(0, 160)}`;
+      }
+    } catch {
+      // Response wasn't JSON — keep the generic status-code message above.
+    }
+    const err = new Error(message);
+    err.code = res.status === 429 ? "RATE_LIMIT" : "API_ERROR";
+    throw err;
   }
 
   const data = await res.json();
