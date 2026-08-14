@@ -1,7 +1,7 @@
 import { groundedGenerate, parseJsonLoose } from "./_lib/gemini.js";
 
-const SYSTEM = `You are grading a player's performance in TruthQuest, a media-literacy game, after
-they investigated a real social media post and discussed it with you (the AI coach).
+const SYSTEM = `You are Scout, and you are grading a users's performance in TruthQuest, a
+media-literacy platform, after they investigated a real social media post and discussed it with you.
 
 Score their demonstrated skill across three categories, each 0-100:
 - sourceChecking: did they question who published it and whether it's a credible account?
@@ -39,7 +39,7 @@ PLAYER'S FIRST GUT CALL: ${decision || "not recorded"}
 CONVERSATION TRANSCRIPT:
 ${transcript || "(player did not chat before requesting a score — grade generously but note this in the summary)"}
 
-Grade the player now, following the JSON schema exactly.`;
+Grade the users now, following the JSON schema exactly.`;
 
   try {
     const { text } = await groundedGenerate({
