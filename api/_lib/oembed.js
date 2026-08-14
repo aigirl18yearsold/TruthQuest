@@ -30,7 +30,11 @@ function decodeHtml(str) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
+    .replace(/&gt;/g, ">")
+    .replace(/&mdash;/g, "—")
+    .replace(/&ndash;/g, "–")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
 }
 
 function stripHtml(html) {
@@ -91,6 +95,15 @@ async function fromInstagramFamily(url, label) {
   }
 }
 
+/** Twitter's oEmbed HTML wraps the real tweet in a <p>, then appends its own
+ * "— Author (@handle) Date" attribution line inside the same blockquote. We only
+ * want the <p> content — the attribution isn't part of what the author wrote. */
+function extractTweetText(html) {
+  const match = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+  const raw = match ? match[1] : html;
+  return decodeHtml(stripHtml(raw)).trim();
+}
+
 async function fromTwitter(url) {
   const endpoint = `https://publish.twitter.com/oembed?url=${encodeURIComponent(url)}&omit_script=true`;
   const data = await getJson(endpoint);
@@ -99,7 +112,7 @@ async function fromTwitter(url) {
     author: data.author_name || "Unknown",
     handle: data.author_url ? `@${data.author_url.split("/").pop()}` : null,
     avatar: null,
-    text: stripHtml(data.html || ""),
+    text: extractTweetText(data.html || ""),
     title: null,
     image: null,
     publishedAt: null,
@@ -153,35 +166,4 @@ async function fromReddit(url) {
     author: data.author_name || "Unknown",
     handle: null,
     avatar: null,
-    text: stripHtml(data.html || data.title || ""),
-    title: data.title || null,
-    image: data.thumbnail_url || null,
-    publishedAt: null,
-    permalink: url,
-    verified: false,
-    source: "oembed",
-  };
-}
-
-/** Fetch and normalize a real post from a pasted URL. Throws a user-readable Error on failure. */
-export async function fetchNormalizedPost(url) {
-  const platform = detectPlatform(url);
-  if (!platform) throw new Error("That doesn't look like a valid link.");
-
-  switch (platform) {
-    case "instagram":
-    case "threads":
-    case "facebook":
-      return fromInstagramFamily(url, platform);
-    case "twitter":
-      return fromTwitter(url).catch(() => fromOpenGraph(url, "twitter"));
-    case "tiktok":
-      return fromTikTok(url).catch(() => fromOpenGraph(url, "tiktok"));
-    case "youtube":
-      return fromYouTube(url).catch(() => fromOpenGraph(url, "youtube"));
-    case "reddit":
-      return fromReddit(url).catch(() => fromOpenGraph(url, "reddit"));
-    default:
-      return fromOpenGraph(url, "web");
-  }
-}
+    text: stripHt
