@@ -7,7 +7,7 @@ import { DEMO_CHAT_REPLIES } from "../../data/demoFixtures.js";
 
 const MAX_FILES = 3;
 
-export default function Coach({ post, analysis, demoMode, history, setHistory, onContinue }) {
+export default function Coach({ post, analysis, demoMode, history, setHistory, onContinue, scoreLoading, scoreError }) {
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState([]);
   const [sending, setSending] = useState(false);
@@ -168,8 +168,17 @@ export default function Coach({ post, analysis, demoMode, history, setHistory, o
       </div>
 
       <div className="px-5 pb-6">
-        <Button onClick={onContinue} icon={ArrowRight} variant="dark" disabled={history.filter((h) => h.role === "user").length === 0}>
-          Get My Scorecard
+        {scoreError && (
+          <p className="mb-2 text-center text-[12px] leading-relaxed text-red">{scoreError}</p>
+        )}
+        <Button
+          onClick={onContinue}
+          icon={ArrowRight}
+          variant="dark"
+          loading={scoreLoading}
+          disabled={history.filter((h) => h.role === "user").length === 0}
+        >
+          {scoreError ? "Try Again" : "Get My Scorecard"}
         </Button>
       </div>
     </div>
