@@ -1,12 +1,12 @@
 import React from "react";
-import { ShieldCheck, Search, Flag, BadgeCheck, ExternalLink, Music, Video } from "lucide-react";
+import { ShieldCheck, Search, Flag, BadgeCheck, ExternalLink, Music, Video, AlertTriangle } from "lucide-react";
 import DemoBanner from "../ui/DemoBanner.jsx";
 
 function initials(name = "") {
   return name.trim().slice(0, 2).toUpperCase() || "??";
 }
 
-export default function PostReview({ post, demoMode, loading, onDecide }) {
+export default function PostReview({ post, demoMode, loading, error, onDecide }) {
   const isUpload = post.source === "upload";
 
   return (
@@ -72,6 +72,12 @@ export default function PostReview({ post, demoMode, loading, onDecide }) {
       </div>
 
       <div className="px-5 pt-4 pb-6 border-t border-ink-line shrink-0">
+        {error && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg px-3 py-2.5 bg-red/10 border border-red/30">
+            <AlertTriangle size={16} className="text-red mt-0.5 shrink-0" />
+            <p className="text-[13px] leading-relaxed text-red">{error}</p>
+          </div>
+        )}
         <p className="mb-3 text-center font-mono text-[12px] tracking-wide text-slate-light">
           WHAT'S YOUR FIRST CALL?
         </p>
