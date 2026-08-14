@@ -17,6 +17,23 @@ const CASE_LABELS = {
   results: "CASE FILE",
 };
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Transient failures (a rate-limit blip, a dropped connection) often succeed a second later.
+// One silent retry before we bother the player with an error is worth it; more than that just
+// delays an honest "this isn't working right now" message.
+async function withOneRetry(fn) {
+  try {
+    return await fn();
+  } catch (e) {
+    console.warn("First attempt failed, retrying once:", e);
+    await wait(1200);
+    return fn();
+  }
+}
+
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [navStack, setNavStack] = useState([]);
@@ -28,14 +45,14 @@ export default function App() {
   const [demoMode, setDemoMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [linkError, setLinkError] = useState(null);
+  const [analysisError, setAnalysisError] = useState(null);
+  const [scoreError, setScoreError] = useState(null);
 
-  // Forward navigation: remembers where we came from so the back button works.
   const goTo = (next) => {
     setNavStack((s) => [...s, screen]);
     setScreen(next);
   };
 
-  // Used for resets ("start over", "next challenge") — clears history rather than pushing to it.
   const resetTo = (next) => {
     setNavStack([]);
     setScreen(next);
@@ -55,6 +72,8 @@ export default function App() {
     setChatHistory([]);
     setScores(null);
     setLinkError(null);
+    setAnalysisError(null);
+    setScoreError(null);
   };
 
   const handleLoadPost = async (url) => {
@@ -107,20 +126,23 @@ export default function App() {
     goTo("post");
   };
 
+  // Demo mode is now ONLY ever true because the player chose "try the sample case" — a
+  // real post's analysis failing never silently swaps in unrelated canned content anymore.
   const handleDecide = async (d) => {
     setDecision(d);
     setLoading(true);
+    setAnalysisError(null);
     try {
-      const result = demoMode ? await fakeDelay(DEMO_ANALYSIS) : await runAnalysis(post);
+      const result = demoMode
+        ? await wait(500).then(() => DEMO_ANALYSIS)
+        : await withOneRetry(() => runAnalysis(post));
       setAnalysis(result);
       goTo("investigate");
     } catch (e) {
-      // Backend not reachable — fall back to the sample case so the experience
-      // still flows smoothly. Details go to the console for debugging, never the UI.
-      console.error("Analysis failed, showing sample case:", e);
-      setAnalysis({ ...DEMO_ANALYSIS });
-      setDemoMode(true);
-      goTo("investigate");
+      console.error("Analysis failed after retry:", e);
+      setAnalysisError(
+        "Scout couldn't finish investigating this post just now — that's usually a temporary hiccup on the AI side. Give it another try."
+      );
     } finally {
       setLoading(false);
     }
@@ -128,18 +150,18 @@ export default function App() {
 
   const handleGetScorecard = async () => {
     setLoading(true);
+    setScoreError(null);
     try {
       const result = demoMode
-        ? await fakeDelay(DEMO_SCORE)
-        : await getScorecard({ post, analysis, decision, history: chatHistory });
+        ? await wait(500).then(() => DEMO_SCORE)
+        : await withOneRetry(() => getScorecard({ post, analysis, decision, history: chatHistory }));
       setScores(result);
+      goTo("results");
     } catch (e) {
-      console.error("Scoring failed, showing sample scorecard:", e);
-      setScores(DEMO_SCORE);
-      setDemoMode(true);
+      console.error("Scoring failed after retry:", e);
+      setScoreError("Scout couldn't put together your scorecard just now. Give it another try.");
     } finally {
       setLoading(false);
-      goTo("results");
     }
   };
 
@@ -170,7 +192,13 @@ export default function App() {
       )}
 
       {screen === "post" && post && (
-        <PostReview post={post} demoMode={demoMode} loading={loading} onDecide={handleDecide} />
+        <PostReview
+          post={post}
+          demoMode={demoMode}
+          loading={loading}
+          error={analysisError}
+          onDecide={handleDecide}
+        />
       )}
 
       {screen === "investigate" && analysis && (
@@ -185,6 +213,8 @@ export default function App() {
           history={chatHistory}
           setHistory={setChatHistory}
           onContinue={handleGetScorecard}
+          scoreLoading={loading}
+          scoreError={scoreError}
         />
       )}
 
@@ -193,8 +223,4 @@ export default function App() {
       )}
     </PhoneShell>
   );
-}
-
-function fakeDelay(value, ms = 600) {
-  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
