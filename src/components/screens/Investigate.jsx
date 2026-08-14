@@ -21,7 +21,7 @@ const VERDICT_STYLE = {
   unverified: { icon: HelpCircle, label: "Couldn't be verified", cls: "text-amber bg-amber/10 border-amber/30" },
 };
 
-export default function Investigate({ analysis, demoMode, demoReason, onContinue }) {
+export default function Investigate({ analysis, demoMode, onContinue }) {
   const [viewed, setViewed] = useState([]);
   const allViewed = viewed.length === analysis.clues.length;
   const toggle = (id) => setViewed((v) => (v.includes(id) ? v : [...v, id]));
@@ -38,7 +38,7 @@ export default function Investigate({ analysis, demoMode, demoReason, onContinue
         </p>
       </div>
 
-      {demoMode && <DemoBanner reason={demoReason || "showing sample findings"} />}
+      {demoMode && <DemoBanner />}
 
       <div className="flex-1 overflow-y-auto px-5 flex flex-col gap-2.5 pb-3">
         {analysis.clues.map((clue) => {
