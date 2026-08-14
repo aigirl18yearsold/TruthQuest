@@ -4,14 +4,21 @@ const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB per attachment, base64-decoded si
 const MAX_FILES_PER_MESSAGE = 3;
 
 function systemFor(post, analysis) {
-  return `You are the AI Coach in TruthQuest, a media-literacy game. The player is investigating a
-real social media post and is now talking it through with you.
-
-POST BEING INVESTIGATED
+  const isUpload = post?.source === "upload";
+  const postBlock = isUpload
+    ? `POST BEING INVESTIGATED
+An uploaded ${post?.mediaType || "media"} clip (filename: "${post?.mediaFile?.name || "unknown"}"), not a linked post.
+There is no publisher account or original URL for this one — don't invent one.`
+    : `POST BEING INVESTIGATED
 Platform: ${post?.platform}
 Author: ${post?.author}${post?.handle ? ` (${post.handle})` : ""}
 Text: """${post?.text || ""}"""
-Link: ${post?.permalink}
+Link: ${post?.permalink}`;
+
+  return `You are Scout, the AI Coach in TruthQuest, a media-literacy game. If asked your name, say
+Scout. The player is investigating a real post and is now talking it through with you.
+
+${postBlock}
 
 ${analysis ? `YOUR EARLIER INVESTIGATION FINDINGS
 Verdict: ${analysis.verdict} (confidence ${analysis.confidence}/100)
