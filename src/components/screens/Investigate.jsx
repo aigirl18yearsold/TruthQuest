@@ -24,6 +24,7 @@ const VERDICT_STYLE = {
 export default function Investigate({ analysis, demoMode, onContinue }) {
   const [viewed, setViewed] = useState([]);
   const allViewed = viewed.length === analysis.clues.length;
+  const canContinue = viewed.length > 0;
   const toggle = (id) => setViewed((v) => (v.includes(id) ? v : [...v, id]));
 
   const v = VERDICT_STYLE[analysis.verdict] || VERDICT_STYLE.unverified;
@@ -32,8 +33,8 @@ export default function Investigate({ analysis, demoMode, onContinue }) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-5 pt-1 pb-3">
-        <h2 className="font-display text-[20px] font-semibold text-paper">Examine the evidence</h2>
-        <p className="mt-1 text-[12.5px] leading-relaxed text-slate-light">
+        <h2 className="font-display text-[22.5px] font-semibold text-paper">Examine the evidence</h2>
+        <p className="mt-1 text-[14px] leading-relaxed text-slate-light">
           Tap each clue — these findings came from the AI checking the post against live search results.
         </p>
       </div>
@@ -53,14 +54,14 @@ export default function Investigate({ analysis, demoMode, onContinue }) {
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <div className={`flex items-center justify-center rounded-lg shrink-0 w-[30px] h-[30px] ${open ? "bg-amber" : "bg-ink-line/35"}`}>
-                  <Icon size={15} className={open ? "text-ink" : "text-slate-light"} />
+                <div className={`flex items-center justify-center rounded-lg shrink-0 w-[34px] h-[34px] ${open ? "bg-amber" : "bg-ink-line/35"}`}>
+                  <Icon size={17} className={open ? "text-ink" : "text-slate-light"} />
                 </div>
-                <span className="flex-1 font-body font-semibold text-[13.5px] text-paper">{clue.question}</span>
-                {open ? <CheckCircle2 size={16} className="text-teal" /> : <Circle size={16} className="text-slate-light" />}
+                <span className="flex-1 font-body font-semibold text-[15px] text-paper">{clue.question}</span>
+                {open ? <CheckCircle2 size={18} className="text-teal" /> : <Circle size={18} className="text-slate-light" />}
               </div>
               {open && (
-                <p className="mt-2.5 pl-[42px] text-[12.5px] leading-relaxed text-slate-light">{clue.finding}</p>
+                <p className="mt-2.5 pl-[42px] text-[14px] leading-relaxed text-slate-light">{clue.finding}</p>
               )}
             </button>
           );
@@ -68,21 +69,21 @@ export default function Investigate({ analysis, demoMode, onContinue }) {
 
         {allViewed && (
           <div className={`mt-1 rounded-xl px-4 py-3 flex items-center gap-2.5 border ${v.cls}`}>
-            <VIcon size={17} className="shrink-0" />
+            <VIcon size={19} className="shrink-0" />
             <div>
-              <p className="font-semibold text-[13px]">{v.label}</p>
-              <p className="font-mono text-[10px] opacity-80">{analysis.confidence}% confidence</p>
+              <p className="font-semibold text-[14.5px]">{v.label}</p>
+              <p className="font-mono text-[11px] opacity-80">{analysis.confidence}% confidence</p>
             </div>
           </div>
         )}
       </div>
 
       <div className="px-5 pt-3 pb-6 border-t border-ink-line">
-        <p className="mb-3 text-center font-mono text-[10.5px] text-slate-light">
+        <p className="mb-3 text-center font-mono text-[12px] text-slate-light">
           {viewed.length}/{analysis.clues.length} CLUES EXAMINED
         </p>
-        <Button onClick={onContinue} icon={ChevronRight} disabled={!allViewed}>
-          {allViewed ? "Talk It Through With Your Coach" : "Examine all clues to continue"}
+        <Button onClick={onContinue} icon={ChevronRight} disabled={!canContinue}>
+          {canContinue ? "Talk It Through With Your Coach" : "Examine at least one clue to continue"}
         </Button>
       </div>
     </div>
