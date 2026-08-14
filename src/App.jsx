@@ -6,7 +6,7 @@ import PostReview from "./components/screens/PostReview.jsx";
 import Investigate from "./components/screens/Investigate.jsx";
 import Coach from "./components/screens/Coach.jsx";
 import Results from "./components/screens/Results.jsx";
-import { fetchPost, runAnalysis, getScorecard } from "./lib/api.js";
+import { fetchPost, runAnalysis, getScorecard, fileToPart } from "./lib/api.js";
 import { DEMO_POST, DEMO_ANALYSIS, DEMO_SCORE } from "./data/demoFixtures.js";
 
 const CASE_LABELS = {
@@ -19,6 +19,7 @@ const CASE_LABELS = {
 
 export default function App() {
   const [screen, setScreen] = useState("home");
+  const [navStack, setNavStack] = useState([]);
   const [post, setPost] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [decision, setDecision] = useState(null);
@@ -27,6 +28,25 @@ export default function App() {
   const [demoMode, setDemoMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [linkError, setLinkError] = useState(null);
+
+  // Forward navigation: remembers where we came from so the back button works.
+  const goTo = (next) => {
+    setNavStack((s) => [...s, screen]);
+    setScreen(next);
+  };
+
+  // Used for resets ("start over", "next challenge") — clears history rather than pushing to it.
+  const resetTo = (next) => {
+    setNavStack([]);
+    setScreen(next);
+  };
+
+  const goBack = () => {
+    if (navStack.length === 0) return;
+    const prev = navStack[navStack.length - 1];
+    setNavStack((s) => s.slice(0, -1));
+    setScreen(prev);
+  };
 
   const resetCase = () => {
     setPost(null);
@@ -44,9 +64,38 @@ export default function App() {
       const p = await fetchPost(url);
       setPost(p);
       setDemoMode(false);
-      setScreen("post");
+      goTo("post");
     } catch (e) {
       setLinkError(e.message || "Couldn't load that link. Try the sample case instead?");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadMedia = async (file) => {
+    setLoading(true);
+    setLinkError(null);
+    try {
+      const part = await fileToPart(file);
+      const mediaType = file.type.startsWith("audio/") ? "audio" : "video";
+      setPost({
+        platform: "upload",
+        author: "Uploaded clip",
+        handle: null,
+        avatar: null,
+        text: file.name,
+        title: null,
+        image: null,
+        permalink: null,
+        verified: false,
+        source: "upload",
+        mediaType,
+        mediaFile: part,
+      });
+      setDemoMode(false);
+      goTo("post");
+    } catch (e) {
+      setLinkError(e.message || "Couldn't read that file.");
     } finally {
       setLoading(false);
     }
@@ -55,7 +104,7 @@ export default function App() {
   const handleUseDemo = () => {
     setPost(DEMO_POST);
     setDemoMode(true);
-    setScreen("post");
+    goTo("post");
   };
 
   const handleDecide = async (d) => {
@@ -64,14 +113,14 @@ export default function App() {
     try {
       const result = demoMode ? await fakeDelay(DEMO_ANALYSIS) : await runAnalysis(post);
       setAnalysis(result);
-      setScreen("investigate");
+      goTo("investigate");
     } catch (e) {
       // Backend not reachable — fall back to the sample case so the experience
       // still flows smoothly. Details go to the console for debugging, never the UI.
       console.error("Analysis failed, showing sample case:", e);
       setAnalysis({ ...DEMO_ANALYSIS });
       setDemoMode(true);
-      setScreen("investigate");
+      goTo("investigate");
     } finally {
       setLoading(false);
     }
@@ -90,22 +139,34 @@ export default function App() {
       setDemoMode(true);
     } finally {
       setLoading(false);
-      setScreen("results");
+      goTo("results");
     }
   };
 
   const handleNext = () => {
     resetCase();
     setDemoMode(false);
-    setScreen("link");
+    resetTo("link");
+  };
+
+  const handleStartOver = () => {
+    resetCase();
+    setDemoMode(false);
+    resetTo("home");
   };
 
   return (
-    <PhoneShell screen={screen} caseLabel={CASE_LABELS[screen]}>
-      {screen === "home" && <Home onStart={() => setScreen("link")} />}
+    <PhoneShell screen={screen} caseLabel={CASE_LABELS[screen]} canGoBack={navStack.length > 0} onBack={goBack}>
+      {screen === "home" && <Home onStart={() => goTo("link")} />}
 
       {screen === "link" && (
-        <LinkEntry onLoad={handleLoadPost} onDemo={handleUseDemo} loading={loading} error={linkError} />
+        <LinkEntry
+          onLoad={handleLoadPost}
+          onUploadMedia={handleUploadMedia}
+          onDemo={handleUseDemo}
+          loading={loading}
+          error={linkError}
+        />
       )}
 
       {screen === "post" && post && (
@@ -113,7 +174,7 @@ export default function App() {
       )}
 
       {screen === "investigate" && analysis && (
-        <Investigate analysis={analysis} demoMode={demoMode} onContinue={() => setScreen("coach")} />
+        <Investigate analysis={analysis} demoMode={demoMode} onContinue={() => goTo("coach")} />
       )}
 
       {screen === "coach" && analysis && (
@@ -128,7 +189,7 @@ export default function App() {
       )}
 
       {screen === "results" && scores && (
-        <Results scores={scores} demoMode={demoMode} onNext={handleNext} onReplay={() => setScreen("home")} />
+        <Results scores={scores} demoMode={demoMode} onNext={handleNext} onReplay={handleStartOver} />
       )}
     </PhoneShell>
   );
