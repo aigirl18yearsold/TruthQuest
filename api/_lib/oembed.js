@@ -41,6 +41,18 @@ function stripHtml(html) {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
+/** Best-effort: try to pull just an og:image from a page's public meta tags. Never throws —
+ * returns null if the page blocks non-browser requests or has no image tag. Used to fill in
+ * a preview image when a platform's oEmbed response doesn't include one (notably X/Twitter). */
+async function tryGetOgImage(url) {
+  try {
+    const html = await getText(url);
+    return metaTag(html, "og:image") || metaTag(html, "twitter:image") || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Fallback used for any platform without a public oEmbed endpoint (or as a last resort):
  * reads the page's public Open Graph / Twitter Card meta tags. This is the same public
  * metadata every link-preview feature (iMessage, Slack, Discord…) already relies on. */
@@ -95,6 +107,36 @@ async function fromInstagramFamily(url, label) {
   }
 }
 
+/** X's embed widget (the one you get from "Embed Tweet") quietly calls this endpoint to fetch
+ * the tweet's real media. It's unofficial and X sometimes throttles or blocks it, so we treat
+ * it as one more best-effort attempt, never a hard dependency. */
+function twitterSyndicationToken(id) {
+  return ((Number(id) / 1e15) * Math.PI).toString(36).replace(/(0+|\.)/g, "");
+}
+
+function extractTweetId(url) {
+  const m = url.match(/status(?:es)?\/(\d+)/);
+  return m ? m[1] : null;
+}
+
+async function tryGetTwitterMedia(url) {
+  const id = extractTweetId(url);
+  if (!id) return null;
+  try {
+    const token = twitterSyndicationToken(id);
+    const res = await fetch(
+      `https://cdn.syndication.twimg.com/tweet-result?id=${id}&token=${token}`,
+      { headers: { "User-Agent": UA, Accept: "application/json" } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    const media = data?.mediaDetails?.[0];
+    return media?.media_url_https || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Twitter's oEmbed HTML wraps the real tweet in a <p>, then appends its own
  * "— Author (@handle) Date" attribution line inside the same blockquote. We only
  * want the <p> content — the attribution isn't part of what the author wrote. */
@@ -107,6 +149,9 @@ function extractTweetText(html) {
 async function fromTwitter(url) {
   const endpoint = `https://publish.twitter.com/oembed?url=${encodeURIComponent(url)}&omit_script=true`;
   const data = await getJson(endpoint);
+  // X's oEmbed never includes a photo/video thumbnail URL, unlike other platforms — try the
+  // embed widget's own media endpoint first, then fall back to public preview tags.
+  const image = (await tryGetTwitterMedia(url)) || (await tryGetOgImage(url));
   return {
     platform: "twitter",
     author: data.author_name || "Unknown",
@@ -114,7 +159,7 @@ async function fromTwitter(url) {
     avatar: null,
     text: extractTweetText(data.html || ""),
     title: null,
-    image: null,
+    image,
     publishedAt: null,
     permalink: url,
     verified: false,
@@ -181,20 +226,34 @@ export async function fetchNormalizedPost(url) {
   const platform = detectPlatform(url);
   if (!platform) throw new Error("That doesn't look like a valid link.");
 
+  let post;
   switch (platform) {
     case "instagram":
     case "threads":
     case "facebook":
-      return fromInstagramFamily(url, platform);
+      post = await fromInstagramFamily(url, platform);
+      break;
     case "twitter":
-      return fromTwitter(url).catch(() => fromOpenGraph(url, "twitter"));
+      post = await fromTwitter(url).catch(() => fromOpenGraph(url, "twitter"));
+      break;
     case "tiktok":
-      return fromTikTok(url).catch(() => fromOpenGraph(url, "tiktok"));
+      post = await fromTikTok(url).catch(() => fromOpenGraph(url, "tiktok"));
+      break;
     case "youtube":
-      return fromYouTube(url).catch(() => fromOpenGraph(url, "youtube"));
+      post = await fromYouTube(url).catch(() => fromOpenGraph(url, "youtube"));
+      break;
     case "reddit":
-      return fromReddit(url).catch(() => fromOpenGraph(url, "reddit"));
+      post = await fromReddit(url).catch(() => fromOpenGraph(url, "reddit"));
+      break;
     default:
-      return fromOpenGraph(url, "web");
+      post = await fromOpenGraph(url, "web");
   }
+
+  // Last-resort enrichment: any platform that came back with no image gets one more
+  // best-effort attempt at the page's public og:image before we give up on it.
+  if (!post.image) {
+    post.image = await tryGetOgImage(url);
+  }
+
+  return post;
 }
