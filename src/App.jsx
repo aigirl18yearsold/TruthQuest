@@ -25,7 +25,6 @@ export default function App() {
   const [chatHistory, setChatHistory] = useState([]);
   const [scores, setScores] = useState(null);
   const [demoMode, setDemoMode] = useState(false);
-  const [demoReason, setDemoReason] = useState(null);
   const [loading, setLoading] = useState(false);
   const [linkError, setLinkError] = useState(null);
 
@@ -36,7 +35,6 @@ export default function App() {
     setChatHistory([]);
     setScores(null);
     setLinkError(null);
-    setDemoReason(null);
   };
 
   const handleLoadPost = async (url) => {
@@ -68,11 +66,11 @@ export default function App() {
       setAnalysis(result);
       setScreen("investigate");
     } catch (e) {
-      // Backend not deployed / no key yet — fall back to the sample analysis so the
-      // demo still flows, but say exactly why instead of failing silently.
+      // Backend not reachable — fall back to the sample case so the experience
+      // still flows smoothly. Details go to the console for debugging, never the UI.
+      console.error("Analysis failed, showing sample case:", e);
       setAnalysis({ ...DEMO_ANALYSIS });
       setDemoMode(true);
-      setDemoReason(e.message || "live analysis unavailable");
       setScreen("investigate");
     } finally {
       setLoading(false);
@@ -87,9 +85,9 @@ export default function App() {
         : await getScorecard({ post, analysis, decision, history: chatHistory });
       setScores(result);
     } catch (e) {
+      console.error("Scoring failed, showing sample scorecard:", e);
       setScores(DEMO_SCORE);
       setDemoMode(true);
-      setDemoReason(e.message || "live scoring unavailable");
     } finally {
       setLoading(false);
       setScreen("results");
@@ -115,7 +113,7 @@ export default function App() {
       )}
 
       {screen === "investigate" && analysis && (
-        <Investigate analysis={analysis} demoMode={demoMode} demoReason={demoReason} onContinue={() => setScreen("coach")} />
+        <Investigate analysis={analysis} demoMode={demoMode} onContinue={() => setScreen("coach")} />
       )}
 
       {screen === "coach" && analysis && (
@@ -123,7 +121,6 @@ export default function App() {
           post={post}
           analysis={analysis}
           demoMode={demoMode}
-          demoReason={demoReason}
           history={chatHistory}
           setHistory={setChatHistory}
           onContinue={handleGetScorecard}
@@ -131,7 +128,7 @@ export default function App() {
       )}
 
       {screen === "results" && scores && (
-        <Results scores={scores} demoMode={demoMode} demoReason={demoReason} onNext={handleNext} onReplay={() => setScreen("home")} />
+        <Results scores={scores} demoMode={demoMode} onNext={handleNext} onReplay={() => setScreen("home")} />
       )}
     </PhoneShell>
   );
