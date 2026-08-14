@@ -116,7 +116,7 @@ async function fromTikTok(url) {
     platform: "tiktok",
     author: data.author_name || "Unknown",
     handle: data.author_url ? `@${data.author_url.split("/").pop()}` : null,
-    avatar: data.thumbnail_url || null,
+    avatar: null,
     text: data.title || "",
     title: null,
     image: data.thumbnail_url || null,
