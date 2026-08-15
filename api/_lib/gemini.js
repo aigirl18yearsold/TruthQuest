@@ -24,20 +24,21 @@ export async function groundedGenerate({
         }
       : undefined,
 
-    // Gemini 3.6 Flash supports Google Search grounding.
+    // Keep Google Search grounding enabled.
     tools: [{ google_search: {} }],
-
-    generationConfig: json
-      ? {
-          responseMimeType: "application/json",
-        }
-      : undefined,
   };
 
-  let res;
+  // IMPORTANT:
+  // Do NOT send responseMimeType: "application/json" together
+  // with Google Search grounding on this request.
+  //
+  // The prompt already tells Scout to return JSON, and
+  // parseJsonLoose() handles the JSON parsing afterward.
+
+  let response;
 
   try {
-    res = await fetch(ENDPOINT, {
+    response = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,25 +48,25 @@ export async function groundedGenerate({
     });
   } catch (networkError) {
     const err = new Error(
-      "Could not connect to the Gemini API. Please try again."
+      "Could not connect to Gemini. Please try again."
     );
     err.code = "NETWORK_ERROR";
     throw err;
   }
 
-  const detail = await res.text().catch(() => "");
+  const responseText = await response.text().catch(() => "");
 
-  if (!res.ok) {
+  if (!response.ok) {
     let apiMessage = "";
 
     try {
-      const parsed = JSON.parse(detail);
+      const parsed = JSON.parse(responseText);
       apiMessage = parsed?.error?.message || "";
     } catch {
-      // Keep the raw response fallback below.
+      // Keep fallback message.
     }
 
-    if (res.status === 429) {
+    if (response.status === 429) {
       const err = new Error(
         "Gemini's quota is temporarily unavailable. Please try again later."
       );
@@ -73,15 +74,15 @@ export async function groundedGenerate({
       throw err;
     }
 
-    if (res.status === 401 || res.status === 403) {
+    if (response.status === 401 || response.status === 403) {
       const err = new Error(
-        "Gemini rejected the API key. Check GEMINI_API_KEY in your server environment variables."
+        "Gemini rejected the API key. Check GEMINI_API_KEY."
       );
       err.code = "INVALID_API_KEY";
       throw err;
     }
 
-    if (res.status === 404) {
+    if (response.status === 404) {
       const err = new Error(
         `Gemini model "${MODEL}" was not found. Check GEMINI_MODEL.`
       );
@@ -89,10 +90,10 @@ export async function groundedGenerate({
       throw err;
     }
 
-    if (res.status === 400) {
+    if (response.status === 400) {
       const err = new Error(
         apiMessage ||
-          "Gemini rejected the request. The media or request format may not be supported."
+          "Gemini rejected the request. Check the media format and request settings."
       );
       err.code = "BAD_REQUEST";
       throw err;
@@ -100,9 +101,8 @@ export async function groundedGenerate({
 
     const err = new Error(
       apiMessage ||
-        `Gemini API error (${res.status}).`
+        `Gemini API error (${response.status}).`
     );
-
     err.code = "API_ERROR";
     throw err;
   }
@@ -110,7 +110,7 @@ export async function groundedGenerate({
   let data;
 
   try {
-    data = JSON.parse(detail);
+    data = JSON.parse(responseText);
   } catch {
     const err = new Error(
       "Gemini returned an invalid response."
@@ -122,11 +122,7 @@ export async function groundedGenerate({
   const candidate = data?.candidates?.[0];
 
   if (!candidate) {
-    const err = new Error(
-      "Gemini did not return an analysis."
-    );
-    err.code = "EMPTY_RESPONSE";
-    throw err;
+    throw new Error("Gemini did not return an analysis.");
   }
 
   const parts = candidate?.content?.parts || [];
@@ -137,16 +133,13 @@ export async function groundedGenerate({
     .trim();
 
   if (!text) {
-    const finishReason = candidate?.finishReason;
+    const reason =
+      candidate?.finishReason ||
+      "unknown";
 
-    const err = new Error(
-      finishReason
-        ? `Gemini did not return text. Finish reason: ${finishReason}.`
-        : "Gemini returned an empty analysis."
+    throw new Error(
+      `Gemini returned no analysis. Finish reason: ${reason}.`
     );
-
-    err.code = "EMPTY_RESPONSE";
-    throw err;
   }
 
   const chunks =
@@ -171,10 +164,6 @@ export async function groundedGenerate({
   };
 }
 
-/**
- * Best-effort JSON parser.
- * Removes markdown fences and extracts the first JSON object if necessary.
- */
 export function parseJsonLoose(text) {
   if (!text || typeof text !== "string") {
     throw new Error("Model returned no usable JSON.");
@@ -194,7 +183,7 @@ export function parseJsonLoose(text) {
       try {
         return JSON.parse(match[0]);
       } catch {
-        // Continue to the final error below.
+        // Continue below.
       }
     }
 
