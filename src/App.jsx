@@ -143,7 +143,9 @@ export default function App() {
     } catch (e) {
       console.error("Analysis failed after retry:", e);
       setAnalysisError(
-        "Scout couldn't finish investigating this post just now — that's usually a temporary hiccup on the AI side. Give it another try."
+        e.status === 400
+          ? e.message || "There's nothing here for Scout to investigate yet."
+          : "Scout couldn't finish investigating this post just now — that's usually a temporary hiccup on the AI side. Give it another try."
       );
     } finally {
       setLoading(false);
