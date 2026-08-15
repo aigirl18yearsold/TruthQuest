@@ -200,7 +200,7 @@ The architecture prioritizes simplicity, accessibility, and scalability.
 | 🧭 Team Lead & Product/Proposal Lead | Shaila | Product direction, proposal, impact strategy, final pitch |
 | 💻 Technical Lead | — | Interactive prototype & technical implementation |
 | 🎨 Research & UI/UX Lead | — | MIL research, scenarios, evidence, UX & visual design |
-| 🚀 Team Member 4 | — | [Add responsibility here] |
+| 🎬 Member 4 — UI/UX & Pitch Video | Abanob George | Interface design, visuals/diagrams, prototype polish, 3-minute pitch video, presentation |
 
 ---
 
