@@ -23,7 +23,7 @@ function wait(ms) {
 }
 
 // Transient failures (a rate-limit blip, a dropped connection) often succeed a second later.
-// One silent retry before we bother the player with an error is worth it; more than that just
+// One silent retry before we bother the user with an error is worth it; more than that just
 // delays an honest "this isn't working right now" message.
 async function withOneRetry(fn) {
   try {
@@ -128,7 +128,7 @@ export default function App() {
     goTo("post");
   };
 
-  // Demo mode is now ONLY ever true because the player chose "try the sample case" — a
+  // Demo mode is now ONLY ever true because the user chose "try the sample case" — a
   // real post's analysis failing never silently swaps in unrelated canned content anymore.
   const handleDecide = async (d) => {
     setDecision(d);
