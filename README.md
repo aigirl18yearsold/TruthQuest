@@ -220,6 +220,7 @@ The project explores how technology and youth-led innovation can strengthen Medi
 |--------|--------|
 | 🚧 Current | Hackathon prototype in development |
 | 📦 Repository | [aigirl18yearsold/TruthQuest](https://github.com/aigirl18yearsold/TruthQuest) |
+| 🌐 Live Demo | [https://truth.futurexdev.tech](https://truth.futurexdev.tech) |
 
 This repository documents the development of TruthQuest and its prototype.
 
