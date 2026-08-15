@@ -46,17 +46,17 @@ export default function LinkEntry({ onLoad, onDemo, onUploadMedia, loading, erro
   };
 
   return (
-    <div className="flex flex-col h-full px-5 pt-2 pb-6">
-      <h2 className="font-display text-[22.5px] font-semibold text-paper">Bring in a real post</h2>
-      <p className="mt-1 text-[14px] leading-relaxed text-slate-light">
+    <div className="flex flex-col h-full px-5 pt-4 pb-6 bg-mist">
+      <h2 className="font-display text-[20px] font-extrabold text-navy">Bring in a real post</h2>
+      <p className="mt-1 text-[14px] leading-relaxed text-slate">
         Paste a public post link, or upload a clip someone sent you directly.
       </p>
 
-      <div className="mt-4 flex rounded-xl bg-ink-soft border border-ink-line p-1">
+      <div className="mt-4 flex rounded-xl bg-paper border border-paper-dim p-1">
         <button
           onClick={() => setMode("link")}
           className={`flex-1 rounded-lg py-2 font-body text-[13px] font-semibold transition-colors ${
-            mode === "link" ? "bg-amber text-ink" : "text-slate-light"
+            mode === "link" ? "bg-navy text-white" : "text-slate"
           }`}
         >
           Paste a link
@@ -64,7 +64,7 @@ export default function LinkEntry({ onLoad, onDemo, onUploadMedia, loading, erro
         <button
           onClick={() => setMode("upload")}
           className={`flex-1 rounded-lg py-2 font-body text-[13px] font-semibold transition-colors ${
-            mode === "upload" ? "bg-amber text-ink" : "text-slate-light"
+            mode === "upload" ? "bg-navy text-white" : "text-slate"
           }`}
         >
           Upload audio/video
@@ -73,22 +73,22 @@ export default function LinkEntry({ onLoad, onDemo, onUploadMedia, loading, erro
 
       {mode === "link" ? (
         <>
-          <div className="mt-4 rounded-xl border border-ink-line focus-within:border-amber bg-ink-soft flex items-center gap-2 px-3 py-3">
+          <div className="mt-4 rounded-xl border border-paper-dim focus-within:border-blue bg-paper flex items-center gap-2 px-3 py-3">
             <input
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitLink()}
               placeholder="https://..."
-              className="flex-1 bg-transparent outline-none text-[14.5px] text-paper placeholder:text-slate-light font-mono"
+              className="flex-1 bg-transparent outline-none text-[14.5px] text-navy placeholder:text-slate-light"
             />
-            <button onClick={handlePaste} className="text-slate-light hover:text-amber shrink-0" aria-label="Paste from clipboard">
+            <button onClick={handlePaste} className="text-slate-light hover:text-blue shrink-0" aria-label="Paste from clipboard">
               <ClipboardPaste size={18} />
             </button>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-1.5">
             {PLATFORMS.map((p) => (
-              <span key={p} className="font-mono text-[11px] px-2 py-1 rounded-full bg-ink-soft border border-ink-line text-slate-light">
+              <span key={p} className="text-[11px] font-medium px-2 py-1 rounded-full bg-blue-soft border border-paper-dim text-slate">
                 {p}
               </span>
             ))}
@@ -106,33 +106,33 @@ export default function LinkEntry({ onLoad, onDemo, onUploadMedia, loading, erro
           {!file ? (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink-line py-8 text-slate-light hover:border-amber hover:text-amber transition-colors"
+              className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-paper-dim bg-paper py-8 text-slate hover:border-blue hover:text-blue transition-colors"
             >
               <Upload size={22} />
               <span className="font-body text-[13px] font-semibold">Tap to choose a file</span>
-              <span className="font-mono text-[10.5px]">MP3, M4A, MP4, MOV — up to ~14MB</span>
+              <span className="text-[11px] text-slate-light">MP3, M4A, MP4, MOV — up to ~14MB</span>
             </button>
           ) : (
-            <div className="flex items-center gap-3 rounded-xl border border-amber/35 bg-ink-soft px-4 py-3.5">
-              <div className="flex items-center justify-center rounded-lg w-9 h-9 bg-amber shrink-0">
-                {file.type.startsWith("audio/") ? <Music size={16} className="text-ink" /> : <Video size={16} className="text-ink" />}
+            <div className="flex items-center gap-3 rounded-xl border border-blue/30 bg-blue-soft px-4 py-3.5">
+              <div className="flex items-center justify-center rounded-lg w-9 h-9 bg-navy shrink-0">
+                {file.type.startsWith("audio/") ? <Music size={16} className="text-white" /> : <Video size={16} className="text-white" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-body text-[13px] font-semibold text-paper truncate">{file.name}</p>
-                <p className="font-mono text-[10.5px] text-slate-light">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
+                <p className="font-body text-[13px] font-semibold text-navy truncate">{file.name}</p>
+                <p className="text-[11px] text-slate">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
               </div>
-              <button onClick={() => setFile(null)} className="text-slate-light hover:text-red shrink-0">
+              <button onClick={() => setFile(null)} className="text-slate-light hover:text-rose shrink-0">
                 <X size={16} />
               </button>
             </div>
           )}
           {fileError && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg px-3 py-2.5 bg-red/10 border border-red/30">
-              <AlertTriangle size={16} className="text-red mt-0.5 shrink-0" />
-              <p className="text-[13.5px] leading-relaxed text-red">{fileError}</p>
+            <div className="mt-3 flex items-start gap-2 rounded-lg px-3 py-2.5 bg-rose-soft border border-rose/25">
+              <AlertTriangle size={16} className="text-rose mt-0.5 shrink-0" />
+              <p className="text-[13.5px] leading-relaxed text-rose">{fileError}</p>
             </div>
           )}
-          <p className="mt-3 text-[11.5px] leading-relaxed text-slate-light">
+          <p className="mt-3 text-[11.5px] leading-relaxed text-slate">
             Scout will listen to or watch the clip to find the claim being made, then investigate it —
             best for short, focused clips rather than long recordings.
           </p>
@@ -140,9 +140,9 @@ export default function LinkEntry({ onLoad, onDemo, onUploadMedia, loading, erro
       )}
 
       {error && (
-        <div className="mt-3 flex items-start gap-2 rounded-lg px-3 py-2.5 bg-red/10 border border-red/30">
-          <AlertTriangle size={16} className="text-red mt-0.5 shrink-0" />
-          <p className="text-[13.5px] leading-relaxed text-red">{error}</p>
+        <div className="mt-3 flex items-start gap-2 rounded-lg px-3 py-2.5 bg-rose-soft border border-rose/25">
+          <AlertTriangle size={16} className="text-rose mt-0.5 shrink-0" />
+          <p className="text-[13.5px] leading-relaxed text-rose">{error}</p>
         </div>
       )}
 
@@ -158,7 +158,7 @@ export default function LinkEntry({ onLoad, onDemo, onUploadMedia, loading, erro
         )}
         <button
           onClick={onDemo}
-          className="w-full flex items-center justify-center gap-1.5 py-2 font-mono text-[12.5px] text-slate-light hover:text-amber"
+          className="w-full flex items-center justify-center gap-1.5 py-2 text-[12.5px] font-medium text-slate hover:text-blue"
         >
           <FlaskConical size={13} /> Or try the sample case
         </button>
