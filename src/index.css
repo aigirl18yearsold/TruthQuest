@@ -8,8 +8,8 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: #0d1023;
+  background: #dde6f7;
 }
 
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-thumb { background: #333B63; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #C7D2E8; border-radius: 4px; }
