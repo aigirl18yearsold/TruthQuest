@@ -16,9 +16,9 @@ const ICONS = {
 };
 
 const VERDICT_STYLE = {
-  misleading: { icon: ShieldAlert, label: "Likely misleading", cls: "text-red bg-red/10 border-red/30" },
-  credible: { icon: ShieldCheck, label: "Looks credible", cls: "text-teal bg-teal/10 border-teal/30" },
-  unverified: { icon: HelpCircle, label: "Couldn't be verified", cls: "text-amber bg-amber/10 border-amber/30" },
+  misleading: { icon: ShieldAlert, label: "Likely misleading", cls: "text-rose bg-rose-soft border-rose/25" },
+  credible: { icon: ShieldCheck, label: "Looks credible", cls: "text-mint bg-mint-soft border-mint/20" },
+  unverified: { icon: HelpCircle, label: "Couldn't be verified", cls: "text-amber bg-amber-soft border-amber/25" },
 };
 
 export default function Investigate({ analysis, demoMode, onContinue }) {
@@ -31,10 +31,10 @@ export default function Investigate({ analysis, demoMode, onContinue }) {
   const VIcon = v.icon;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-5 pt-1 pb-3">
-        <h2 className="font-display text-[22.5px] font-semibold text-paper">Examine the evidence</h2>
-        <p className="mt-1 text-[14px] leading-relaxed text-slate-light">
+    <div className="flex flex-col h-full bg-mist">
+      <div className="px-5 pt-4 pb-3">
+        <h2 className="font-display text-[19px] font-extrabold text-navy">Examine the evidence</h2>
+        <p className="mt-1 text-[13.5px] leading-relaxed text-slate">
           Tap each clue — these findings came from the AI checking the post against live search results.
         </p>
       </div>
@@ -49,19 +49,19 @@ export default function Investigate({ analysis, demoMode, onContinue }) {
             <button
               key={clue.id}
               onClick={() => toggle(clue.id)}
-              className={`text-left rounded-xl px-4 py-3.5 transition-colors border ${
-                open ? "bg-ink-soft border-amber/35" : "bg-transparent border-ink-line"
+              className={`text-left rounded-xl px-4 py-3.5 transition-colors border bg-paper ${
+                open ? "border-blue" : "border-paper-dim"
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <div className={`flex items-center justify-center rounded-lg shrink-0 w-[34px] h-[34px] ${open ? "bg-amber" : "bg-ink-line/35"}`}>
-                  <Icon size={17} className={open ? "text-ink" : "text-slate-light"} />
+                <div className="flex items-center justify-center rounded-lg shrink-0 w-[34px] h-[34px] bg-blue-soft">
+                  <Icon size={17} className="text-blue" />
                 </div>
-                <span className="flex-1 font-body font-semibold text-[15px] text-paper">{clue.question}</span>
-                {open ? <CheckCircle2 size={18} className="text-teal" /> : <Circle size={18} className="text-slate-light" />}
+                <span className="flex-1 font-body font-semibold text-[14.5px] text-navy">{clue.question}</span>
+                {open ? <CheckCircle2 size={18} className="text-mint" /> : <Circle size={18} className="text-slate-light" />}
               </div>
               {open && (
-                <p className="mt-2.5 pl-[42px] text-[14px] leading-relaxed text-slate-light">{clue.finding}</p>
+                <p className="mt-2.5 pl-[42px] text-[13.5px] leading-relaxed text-slate">{clue.finding}</p>
               )}
             </button>
           );
@@ -71,19 +71,19 @@ export default function Investigate({ analysis, demoMode, onContinue }) {
           <div className={`mt-1 rounded-xl px-4 py-3 flex items-center gap-2.5 border ${v.cls}`}>
             <VIcon size={19} className="shrink-0" />
             <div>
-              <p className="font-semibold text-[14.5px]">{v.label}</p>
-              <p className="font-mono text-[11px] opacity-80">{analysis.confidence}% confidence</p>
+              <p className="font-semibold text-[14px]">{v.label}</p>
+              <p className="text-[11px] opacity-80">{analysis.confidence}% confidence</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="px-5 pt-3 pb-6 border-t border-ink-line">
-        <p className="mb-3 text-center font-mono text-[12px] text-slate-light">
-          {viewed.length}/{analysis.clues.length} CLUES EXAMINED
+      <div className="px-5 pt-3 pb-6 border-t border-paper-dim bg-paper">
+        <p className="mb-3 text-center text-[12px] font-medium text-slate">
+          {viewed.length}/{analysis.clues.length} clues examined
         </p>
         <Button onClick={onContinue} icon={ChevronRight} disabled={!canContinue}>
-          {canContinue ? "Talk It Through With Your Coach" : "Examine at least one clue to continue"}
+          {canContinue ? "Talk It Through With Scout" : "Examine at least one clue to continue"}
         </Button>
       </div>
     </div>
