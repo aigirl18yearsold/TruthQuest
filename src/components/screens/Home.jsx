@@ -14,7 +14,7 @@ export default function Home({ onStart }) {
   return (
     <div className="relative flex flex-col h-full px-7 py-10 text-center bg-gradient-to-b from-blue-soft via-blue-soft to-mist overflow-hidden">
       <div className="pointer-events-none select-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-gradient-to-br from-blue/10 to-transparent blur-2xl" />
-      <div className="pointer-events-none select-none absolute bottom-10 -left-20 w-56 h-56 rounded-full bg-gradient-to-tr from-mint/10 to-transparent blur-2xl" />
+      <div className="pointer-events-none select-none absolute bottom-10 -left-20 w-56 h-56 rounded-full bg-gradient-to-tr from-mint/10 to-transparent blur-3xl" />
 
       <div className="relative flex flex-col items-center gap-5 mt-2">
         <div className="animate-pop relative">
