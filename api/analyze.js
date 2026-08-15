@@ -10,27 +10,37 @@ const CLUE_QUESTIONS = [
 ];
 
 const SYSTEM = `You are Scout, the investigation engine inside TruthQuest, a media-literacy app that
-teaches people to evaluate social media posts critically. You are NOT a fact-checking verdict
-machine — you are gathering evidence for a human investigator (the player) to reason about themselves.
+teaches people to evaluate social media posts critically.
 
-Some posts arrive as an attached audio or video clip instead of text. In that case, first listen to
-or watch the clip to identify the core claim being made, as if you were transcribing what a viewer
-would take away from it, then investigate that claim exactly as you would a text post.
+You are NOT a fact-checking verdict machine. You gather evidence for a human investigator.
 
-Some posts have no caption text at all — this is completely normal for many video and image posts.
-NEVER reject a post simply because its caption is missing.
+A post MAY have no caption. This is completely normal. NEVER reject a post just because its
+caption is missing.
 
-When there is no caption:
-- For video/audio, watch or listen to the attached media and identify the main claim or message.
-- For images, inspect the image directly and read any visible text.
-- Use whatever information is actually available in the post.
-- Do not treat a missing caption as evidence that the post is misleading.
+If an attached video or audio exists:
+- Watch or listen to it.
+- Identify the main claim or message.
+- Read visible on-screen text.
+- Investigate the claim using reliable sources.
 
-Use Google Search to actually check: who the publisher/account is, whether an original source or
-study exists, whether independent reliable outlets report the same claim, and whether the language
-uses urgency/fear/exaggeration.
+If an image exists:
+- Inspect the image directly.
+- Read visible text.
+- Identify the main claim or message.
+- Investigate that claim.
 
-Respond with ONLY a JSON object, no prose outside it, matching exactly this shape:
+Use Google Search to check:
+- who published it
+- whether an original source exists
+- whether evidence exists
+- whether statistics are supported
+- whether reliable sources confirm or contradict the claim
+- whether the language is emotionally manipulative
+
+If something cannot be verified, say so honestly instead of guessing.
+
+Respond with ONLY a JSON object matching exactly this shape:
+
 {
   "clues": [
     { "id": "publisher", "finding": "1-2 sentence factual finding, plain language" },
@@ -42,165 +52,220 @@ Respond with ONLY a JSON object, no prose outside it, matching exactly this shap
   ],
   "verdict": "credible" | "misleading" | "unverified",
   "confidence": 0-100,
-  "summary": "2-3 sentence coach-voice opening for a follow-up conversation with the player. Do not just say true/false — invite them to think, e.g. point at the specific gap between the claim and the evidence."
+  "summary": "2-3 sentence coach-voice opening for a follow-up conversation with the player."
 }`;
 
 const MAX_MEDIA_BYTES = 14 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
-/** Best-effort: pull a post's preview image server-side and hand it to Gemini as real pixels. */
 async function fetchImageAsInlineData(url) {
   try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
+    const response = await fetch(url);
 
-    const contentType = (res.headers.get("content-type") || "").split(";")[0];
+    if (!response.ok) return null;
+
+    const contentType =
+      (response.headers.get("content-type") || "").split(";")[0];
 
     if (!contentType.startsWith("image/")) return null;
 
-    const buf = await res.arrayBuffer();
+    const buffer = await response.arrayBuffer();
 
-    if (buf.byteLength > MAX_IMAGE_BYTES) return null;
+    if (buffer.byteLength > MAX_IMAGE_BYTES) return null;
 
     return {
       mimeType: contentType,
-      data: Buffer.from(buf).toString("base64"),
+      data: Buffer.from(buffer).toString("base64"),
     };
-  } catch {
+  } catch (error) {
+    console.warn("Could not fetch preview image:", error);
     return null;
   }
 }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Use POST." });
-    return;
-  }
-
-  const { post } = req.body || {};
-
-  const hasMedia = !!post?.mediaFile?.data;
-
-  // A caption is NOT required.
-  // Any of these can give Scout something to investigate.
-  const hasAnyContent =
-    post &&
-    (
-      post.text ||
-      post.title ||
-      post.image ||
-      post.permalink ||
-      post.author ||
-      post.handle ||
-      post.platform ||
-      hasMedia
-    );
-
-  if (!hasAnyContent) {
-    res.status(400).json({
-      error: "There's nothing here for Scout to investigate yet.",
+    res.status(405).json({
+      error: "Use POST.",
     });
     return;
-  }
-
-  if (hasMedia) {
-    const approxBytes = post.mediaFile.data.length * 0.75;
-
-    if (approxBytes > MAX_MEDIA_BYTES) {
-      res.status(413).json({
-        error:
-          "That clip is too large to analyze directly — try a shorter clip (under ~14MB).",
-      });
-      return;
-    }
-  }
-
-  const captionLine = post?.text
-    ? `Post text / caption: """${post.text}"""`
-    : `Post text / caption: (none found — this post has no caption. This is normal. Analyze the attached media or other available post information instead.)`;
-
-  let promptText;
-
-  if (hasMedia) {
-    promptText = `Investigate the attached ${post.mediaType || "media"} clip (filename: "${post.mediaFile.name}").
-
-IMPORTANT: This post may have NO caption. That is completely normal. DO NOT reject or stop the
-investigation because the caption is missing.
-
-If there is no caption, watch/listen to the attached media and identify the main claim, message,
-or information a viewer would take away from it.
-
-Read any visible on-screen text as part of the post.
-
-The media was uploaded directly by the player rather than linked from a platform, so there is no
-publisher account or original URL. Note that honestly in the "publisher" and "source" findings
-instead of guessing one.
-
-Identify the core claim made in the clip, then investigate it.
-
-Search for:
-- where the claim originates
-- whether reliable sources report the same claim
-- whether evidence supports the claim
-- whether statistics are supported
-- whether the language is emotionally manipulative
-- whether other reliable sources confirm or contradict it
-
-Answer the six clue questions, then give your overall verdict and confidence, following the JSON
-schema exactly.`;
-  } else {
-    promptText = `Investigate this social media post.
-
-IMPORTANT: A caption is OPTIONAL.
-
-If the post has no caption, DO NOT reject the post and DO NOT treat the missing caption as
-suspicious.
-
-Platform: ${post.platform || "(unknown)"}
-Author / account: ${post.author || "(unknown)"}${
-      post.handle ? ` (${post.handle})` : ""
-    }
-
-${captionLine}
-
-Original link: ${post.permalink || "(not available)"}
-
-If an image is attached, inspect the image directly. Read any visible text and identify the
-main claim or message shown in the image.
-
-Use whatever information is actually available to investigate the post.
-
-Answer the six clue questions, then give your overall verdict and confidence, following the JSON
-schema exactly.
-
-If you can't verify something even after searching, say so honestly in that clue's finding
-instead of guessing.`;
-  }
-
-  const parts = [{ text: promptText }];
-
-  // Attach uploaded video/audio.
-  if (hasMedia) {
-    parts.push({
-      inlineData: {
-        mimeType: post.mediaFile.mimeType,
-        data: post.mediaFile.data,
-      },
-    });
-  }
-
-  // Attach an image when there is no uploaded media.
-  else if (post.image) {
-    const imagePart = await fetchImageAsInlineData(post.image);
-
-    if (imagePart) {
-      parts.push({
-        inlineData: imagePart,
-      });
-    }
   }
 
   try {
+    const { post } = req.body || {};
+
+    if (!post) {
+      res.status(400).json({
+        error: "No post was provided for Scout to investigate.",
+        code: "NO_POST",
+      });
+      return;
+    }
+
+    const hasMedia = Boolean(post?.mediaFile?.data);
+
+    /*
+     * IMPORTANT:
+     * A caption is NOT required.
+     *
+     * Scout can investigate using:
+     * - video/audio
+     * - image
+     * - post URL
+     * - author/account
+     * - title
+     * - caption/text
+     */
+    const hasAnyContent =
+      Boolean(post.text) ||
+      Boolean(post.title) ||
+      Boolean(post.image) ||
+      Boolean(post.permalink) ||
+      Boolean(post.author) ||
+      Boolean(post.handle) ||
+      Boolean(post.platform) ||
+      hasMedia;
+
+    if (!hasAnyContent) {
+      res.status(400).json({
+        error: "There's nothing here for Scout to investigate yet.",
+        code: "NO_CONTENT",
+      });
+      return;
+    }
+
+    /*
+     * Check uploaded media size before sending it to Gemini.
+     */
+    if (hasMedia) {
+      const base64Length = post.mediaFile.data.length;
+      const approxBytes = base64Length * 0.75;
+
+      if (approxBytes > MAX_MEDIA_BYTES) {
+        res.status(413).json({
+          error:
+            "That clip is too large to analyze directly — try a shorter clip under about 14MB.",
+          code: "MEDIA_TOO_LARGE",
+        });
+        return;
+      }
+
+      if (!post.mediaFile.mimeType) {
+        res.status(400).json({
+          error: "The uploaded media is missing its file type.",
+          code: "MISSING_MEDIA_TYPE",
+        });
+        return;
+      }
+    }
+
+    const captionLine = post.text
+      ? `Post text / caption:
+"""${post.text}"""`
+      : `Post text / caption:
+(none found — this post has no caption. This is normal. Do NOT reject the post because of this.)`;
+
+    let promptText;
+
+    if (hasMedia) {
+      promptText = `Investigate the attached ${post.mediaType || "media"}.
+
+Filename: "${post.mediaFile.name || "uploaded media"}"
+
+IMPORTANT:
+This post has no caption, but that is completely okay.
+
+Do NOT stop the investigation because there is no caption.
+
+Instead, analyze the attached media itself.
+
+If it is a video:
+1. Watch the video.
+2. Read visible on-screen text.
+3. Identify the main claim, statement, or message.
+4. Investigate that claim.
+
+If it is audio:
+1. Listen to the audio.
+2. Identify the main claim.
+3. Investigate that claim.
+
+If the media contains visible text, use that text as part of your investigation.
+
+The media was uploaded directly by the player, so there may be no publisher account or original
+URL. If those details are unavailable, say so honestly rather than guessing.
+
+Search for reliable sources that can confirm, contradict, or provide context for the claim.
+
+Answer all six clue questions and return the required JSON format exactly.`;
+    } else {
+      promptText = `Investigate this social media post.
+
+IMPORTANT:
+A caption is OPTIONAL.
+
+If there is no caption, do NOT reject the post and do NOT treat the missing caption as suspicious.
+
+Platform: ${post.platform || "(unknown)"}
+
+Author / account: ${post.author || "(unknown)"}${
+        post.handle ? ` (${post.handle})` : ""
+      }
+
+${captionLine}
+
+Title:
+${post.title || "(none)"}
+
+Original link:
+${post.permalink || "(not available)"}
+
+${
+  post.image
+    ? "An image is attached. Inspect the image directly, including any visible text."
+    : ""
+}
+
+Use whatever information is available to identify the main claim and investigate it.
+
+Answer all six clue questions and return the required JSON format exactly.`;
+    }
+
+    const parts = [
+      {
+        text: promptText,
+      },
+    ];
+
+    /*
+     * Send uploaded video/audio/image to Gemini.
+     */
+    if (hasMedia) {
+      parts.push({
+        inlineData: {
+          mimeType: post.mediaFile.mimeType,
+          data: post.mediaFile.data,
+        },
+      });
+    } else if (post.image) {
+      const imagePart = await fetchImageAsInlineData(post.image);
+
+      if (imagePart) {
+        parts.push({
+          inlineData: imagePart,
+        });
+      }
+    }
+
+    console.log("Scout analysis starting:", {
+      platform: post.platform || null,
+      hasCaption: Boolean(post.text),
+      hasImage: Boolean(post.image),
+      hasMedia,
+      mediaType: post.mediaType || null,
+      hasPermalink: Boolean(post.permalink),
+    });
+
     const { text, sources } = await groundedGenerate({
       systemInstruction: SYSTEM,
       contents: [
@@ -212,36 +277,65 @@ instead of guessing.`;
       json: true,
     });
 
+    if (!text) {
+      throw new Error("Gemini returned an empty analysis.");
+    }
+
     const parsed = parseJsonLoose(text);
 
-    // Merge in the question text so the frontend doesn't need to duplicate it.
-    const clues = CLUE_QUESTIONS.map((c) => {
-      const found = parsed.clues?.find((x) => x.id === c.id);
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Gemini returned an invalid analysis object.");
+    }
+
+    const clues = CLUE_QUESTIONS.map((clue) => {
+      const found = Array.isArray(parsed.clues)
+        ? parsed.clues.find((item) => item?.id === clue.id)
+        : null;
 
       return {
-        id: c.id,
-        question: c.q,
-        finding: found?.finding || "No finding returned.",
+        id: clue.id,
+        question: clue.q,
+        finding:
+          found?.finding ||
+          "Scout could not find enough reliable evidence for this clue.",
       };
     });
 
+    const validVerdicts = [
+      "credible",
+      "misleading",
+      "unverified",
+    ];
+
+    const verdict = validVerdicts.includes(parsed.verdict)
+      ? parsed.verdict
+      : "unverified";
+
+    const confidence =
+      typeof parsed.confidence === "number" &&
+      Number.isFinite(parsed.confidence)
+        ? Math.max(0, Math.min(100, parsed.confidence))
+        : 50;
+
     res.status(200).json({
       clues,
-      verdict: parsed.verdict || "unverified",
-      confidence:
-        typeof parsed.confidence === "number"
-          ? parsed.confidence
-          : 50,
+      verdict,
+      confidence,
       summary: parsed.summary || "",
-      sources,
+      sources: Array.isArray(sources) ? sources : [],
     });
   } catch (err) {
-    console.error("Analysis error:", err);
+    /*
+     * IMPORTANT:
+     * Return the REAL error to the frontend while we diagnose this.
+     * This prevents every Gemini problem from looking like the same
+     * generic "temporary hiccup".
+     */
+    console.error("REAL ANALYSIS ERROR:", err);
 
-    const status = err.code === "NO_API_KEY" ? 501 : 502;
-
-    res.status(status).json({
-      error: err.message || "Analysis failed.",
+    res.status(500).json({
+      error: err?.message || "Analysis failed.",
+      code: err?.code || "UNKNOWN_ERROR",
     });
   }
-} 
+}
