@@ -10,12 +10,13 @@ import { fetchPost, runAnalysis, getScorecard, fileToPart } from "./lib/api.js";
 import { DEMO_POST, DEMO_ANALYSIS, DEMO_SCORE } from "./data/demoFixtures.js";
 
 const CASE_LABELS = {
-  link: "NEW CASE",
-  post: "CASE FILE",
-  investigate: "CASE FILE",
-  coach: "CASE FILE",
-  results: "CASE FILE",
-};
+  link: "New Case",
+  post: "The Post",
+  investigate: "Investigation",
+  coach: "Scout",
+  results: "Your Results",
+}; 
+
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
