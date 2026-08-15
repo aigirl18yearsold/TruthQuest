@@ -1,39 +1,43 @@
 export const DEMO_POST = {
-  platform: "twitter",
-  author: "ScienceDaily.Now",
-  handle: "@sciencedaily_now",
+  platform: "medium",
+  author: "Nassim Nicholas Taleb",
+  handle: "@nntaleb",
   avatar: null,
-  text: "🚨 BREAKING: Scientists prove that students who use their phones for 10 minutes before an exam score 50% higher! 😱📈",
-  image: null,
-  permalink: "https://example.com/demo-post",
+  text: "Believing that the book is just abstract information that can be merely held on a stick is an error we will call dimension overtrucation.",
+  title: "The Book is a Book, not Disembodied Information",
+  image: "https://miro.medium.com/v2/resize:fit:1200/0*gt4EQdDBdUvcfgtP.jpeg",
+  publishedAt: "2026-08-11",
+  permalink: "https://nntaleb.medium.com/the-book-is-a-book-not-disembodied-information-a3fa583b9e8a",
   verified: true,
-  source: "demo",
+  source: "opengraph",
 };
 
 export const DEMO_ANALYSIS = {
   clues: [
-    { id: "publisher", question: "Who published it?", finding: "“ScienceDaily.Now” isn't affiliated with any real research institution — the checkmark is a paid verification badge, not a credibility marker." },
-    { id: "source", question: "Is there an original source?", finding: "No link, study name, or journal is cited anywhere in the post or its replies." },
-    { id: "evidence", question: "Is evidence provided?", finding: "The post shows only a stock photo of a student holding a phone — no data, chart, or sample size." },
-    { id: "statistic", question: "Is the statistic or central claim supported?", finding: "“50% higher” has no baseline. Higher than what? Measured how? Tested on how many students?" },
-    { id: "language", question: "Is the language emotionally manipulative?", finding: "Words like “BREAKING” and the shocked-face emoji are built to trigger urgency and surprise, not to inform." },
-    { id: "crosscheck", question: "Can other reliable sources confirm it?", finding: "A search of major science outlets and fact-checking sites turns up nothing else on this claim." },
+    { id: "publisher", question: "Who published it?", finding: "The author is Nassim Nicholas Taleb, a well-known scholar and statistician. The post is published on his verified Medium publication." },
+    { id: "source", question: "Is there an original source or link?", finding: "Yes. The article originally appeared on Taleb's Substack and is cross-posted to Medium with a link back to the original publication." },
+    { id: "evidence", question: "Is evidence provided?", finding: "The post is primarily philosophical/essayistic rather than empirical. It references Victor Hugo’s _Les Misérables_, a Russian scientist A.R. Luria, and Daniel Kahneman as supporting context." },
+    { id: "statistic", question: "Is the statistic or central claim supported?", finding: "The central claim — that physical books create a different cognitive experience than digital text — is supported by anecdote and reasoning, not controlled experimental data." },
+    { id: "language", question: "Is the language emotionally manipulative?", finding: "No. The tone is reflective and personal. Words like “horrified” express genuine reaction, not manufactured outrage." },
+    { id: "crosscheck", question: "Can other reliable sources confirm it?", finding: "Taleb is a known public intellectual. The themes — embodied cognition, medium effects on memory — are consistent with established cognitive science and his prior work." },
   ],
-  verdict: "misleading",
-  confidence: 88,
-  summary: "This post makes a strong statistical claim but never names the study behind it. Before trusting a number like “50% higher,” look for the original research and see whether independent, reliable outlets report the same finding.",
-  sources: [],
+  verdict: "credible",
+  confidence: 82,
+  summary: "This is a thoughtful essay from a known author, grounded in personal experience and connected to broader cognitive science ideas. It is credible as opinion/reflection, though it is not making a falsifiable empirical claim that can be proven true or false in a strict sense.",
+  sources: [
+    { title: "Original Substack post", url: "https://nntaleb.substack.com" }
+  ],
 };
 
 export const DEMO_CHAT_REPLIES = [
-  "That's the right instinct — a specific number like “50% higher” should always make you ask “compared to what, exactly?” I searched for the original study and couldn't find one anywhere, which is itself a red flag.",
-  "Good catch. Accounts that look official (checkmarks, science-y names) aren't automatically credible — badges can be purchased. What matters is whether they cite where the claim comes from.",
-  "Exactly — urgency words like “BREAKING” and shocked-face emoji are a manipulation pattern, not a reporting style. Real findings don't usually need to shout.",
+  "Good observation. Taleb is a known public intellectual, and this post reads like personal essay, not clickbait. Still, ask yourself: is he making a testable claim, or just reflecting on experience?",
+  "Nice. One key check here is separating 'credible author' from 'provable fact.' He cites Luria and Kahneman as supporting context — those are real references you could verify.",
+  "Exactly. Emotional language here is mild and personal, not manipulative. The main thing to evaluate is whether an argument from personal experience is being presented as universal scientific fact — and in this case, it isn't.",
 ];
 
 export const DEMO_SCORE = {
-  sourceChecking: 82,
-  evidenceEvaluation: 75,
-  manipulationDetection: 88,
-  summary: "You caught the missing source quickly and didn't let the confident tone override your judgment. Next time, try naming exactly what evidence WOULD change your mind — it sharpens the check even further.",
+  sourceChecking: 88,
+  evidenceEvaluation: 76,
+  manipulationDetection: 92,
+  summary: "You correctly identified a credible author and didn't overstate the evidence. You also noticed the difference between personal reflection and empirical proof. To sharpen further, try separating 'the author is credible' from 'the specific claim is proven.'",
 };

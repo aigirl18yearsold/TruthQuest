@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import "dotenv/config";
 
 import fetchPostHandler from "./api/fetch-post.js";
 import analyzeHandler from "./api/analyze.js";
@@ -11,7 +12,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.get('/health', (_req, res) => res.json({status:'ok', uptime: process.uptime()}));
 
-// Generous limit: chat messages can carry base64-encoded images/PDFs.
 app.use(express.json({ limit: "30mb" }));
 
 app.post("/api/fetch-post", fetchPostHandler);
@@ -19,7 +19,6 @@ app.post("/api/analyze", analyzeHandler);
 app.post("/api/chat", chatHandler);
 app.post("/api/score", scoreHandler);
 
-// Serve the built frontend (created by `npm run build`).
 const distPath = path.join(__dirname, "dist");
 app.use(express.static(distPath));
 app.get("*", (_req, res) => {

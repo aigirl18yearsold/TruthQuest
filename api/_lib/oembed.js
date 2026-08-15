@@ -1,16 +1,27 @@
 import { detectPlatform } from "./platform.js";
 
 const UA =
-  "Mozilla/5.0 (compatible; TruthQuestBot/1.0; +https://github.com/) media-literacy-prototype";
+  "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
 
 async function getJson(url) {
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": UA,
+      Accept: "application/json",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+  });
   if (!res.ok) throw new Error(`Upstream responded ${res.status}`);
   return res.json();
 }
 
 async function getText(url) {
-  const res = await fetch(url, { headers: { "User-Agent": UA } });
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": UA,
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+  });
   if (!res.ok) throw new Error(`Upstream responded ${res.status}`);
   return res.text();
 }
@@ -246,7 +257,11 @@ export async function fetchNormalizedPost(url) {
       post = await fromReddit(url).catch(() => fromOpenGraph(url, "reddit"));
       break;
     default:
-      post = await fromOpenGraph(url, "web");
+      try {
+        post = await fromOpenGraph(url, "web");
+      } catch {
+        post = await fromJinaText(url);
+      }
   }
 
   // Last-resort enrichment: any platform that came back with no image gets one more
@@ -256,4 +271,37 @@ export async function fetchNormalizedPost(url) {
   }
 
   return post;
+}
+
+/** Absolute last resort for blocked/unfriendly URLs: use a text extraction proxy
+ * to pull page content, then normalize into a minimal post object. */
+async function fromJinaText(url) {
+  const target = `https://r.jina.ai/http://${encodeURIComponent(url.replace(/^https?:\/\//, ""))}`;
+  const res = await fetch(target, {
+    headers: {
+      "User-Agent": UA,
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Couldn't load that link from the extraction fallback.`);
+  }
+  const text = await res.text();
+  const first = text.split("\n")[0]?.trim() || "";
+  const title = first || "Linked content";
+  const bodyText = text.replace(/^.*?\n\n/, "").trim();
+  return {
+    platform: "web",
+    author: first || "Unknown source",
+    handle: null,
+    avatar: null,
+    text: bodyText || title,
+    title,
+    image: null,
+    publishedAt: null,
+    permalink: url,
+    verified: false,
+    source: "jina-text",
+  };
 }
