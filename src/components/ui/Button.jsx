@@ -1,11 +1,12 @@
 import React from "react";
 
 const VARIANTS = {
-  amber: "bg-amber text-ink shadow-[0_4px_14px_rgba(232,163,61,0.25)]",
-  teal: "bg-teal text-ink",
-  outlineRed: "bg-transparent text-red border-[1.5px] border-red",
+  navy: "bg-navy text-white shadow-[0_4px_14px_rgba(16,27,61,0.25)]",
+  blue: "bg-blue text-white shadow-[0_4px_14px_rgba(59,111,242,0.3)]",
+  mint: "bg-mint text-white",
+  outlineRose: "bg-transparent text-rose border-[1.5px] border-rose",
   ghost: "bg-transparent text-slate-light",
-  dark: "bg-ink-soft text-paper border border-ink-line",
+  soft: "bg-blue-soft text-navy border border-paper-dim",
 };
 
 export default function Button({
@@ -13,7 +14,7 @@ export default function Button({
   onClick,
   icon: Icon,
   iconPosition = "right",
-  variant = "amber",
+  variant = "navy",
   disabled,
   loading,
   full = true,
