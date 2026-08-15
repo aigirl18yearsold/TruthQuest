@@ -1,26 +1,27 @@
-/** @type {import('tailwindcss').Config} */
+ /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        ink: "#161B33",
-        "ink-soft": "#232A4D",
-        "ink-line": "#333B63",
-        paper: "#F7F5EE",
-        "paper-dim": "#EAE7DC",
-        amber: "#E8A33D",
-        "amber-dark": "#B97A1F",
-        teal: "#2F9E7A",
-        "teal-dark": "#1F6E54",
-        red: "#D2444C",
-        "red-dark": "#9E2E35",
-        slate: "#6B7280",
-        "slate-light": "#9CA3AF",
-        cream: "#FBFAF6",
+        navy: "#101B3D",
+        "navy-soft": "#1C2B5C",
+        blue: "#3B6FF2",
+        "blue-soft": "#EAF1FE",
+        mist: "#F2F5FC",
+        paper: "#FFFFFF",
+        "paper-dim": "#E6EBF5",
+        slate: "#57607A",
+        "slate-light": "#8D97AE",
+        mint: "#1FAE72",
+        "mint-soft": "#E4F8EC",
+        amber: "#E7A23A",
+        "amber-soft": "#FBF0DA",
+        rose: "#E14C5C",
+        "rose-soft": "#FCE6E9",
       },
       fontFamily: {
-        display: ["Fraunces", "Georgia", "serif"],
+        display: ["Inter", "system-ui", "sans-serif"],
         body: ["Inter", "system-ui", "sans-serif"],
         mono: ["'JetBrains Mono'", "'Courier New'", "monospace"],
       },
