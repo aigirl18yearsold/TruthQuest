@@ -10,22 +10,9 @@ const FEATURES = [
   { icon: Globe2, text: "Check real sources live" },
 ];
 
-const FloatingBadge = ({ icon: Icon, label, delay }) => (
-  <div
-    className="animate-slide-up absolute rounded-2xl bg-paper/90 backdrop-blur border border-paper-dim/80 shadow-sm px-3 py-2 flex items-center gap-2"
-    style={{ animationDelay: `${delay}ms`, animationFillMode: "both" }}
-  >
-    <div className="w-7 h-7 rounded-full bg-blue-soft flex items-center justify-center">
-      <Icon size={14} className="text-blue" />
-    </div>
-    <span className="text-[11px] font-bold text-navy whitespace-nowrap">{label}</span>
-  </div>
-);
-
 export default function Home({ onStart }) {
   return (
     <div className="relative flex flex-col h-full px-7 py-10 text-center bg-gradient-to-b from-blue-soft via-blue-soft to-mist overflow-hidden">
-      {/* Decorative brand marks */}
       <div className="pointer-events-none select-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-gradient-to-br from-blue/10 to-transparent blur-2xl" />
       <div className="pointer-events-none select-none absolute bottom-10 -left-20 w-56 h-56 rounded-full bg-gradient-to-tr from-mint/10 to-transparent blur-2xl" />
 
@@ -49,25 +36,17 @@ export default function Home({ onStart }) {
         </div>
       </div>
 
-      {/* Visual mini-flow */}
-      <div className="relative w-full max-w-[280px] mx-auto my-6 h-28">
-        <FloatingBadge icon={MessageSquareText} label="Encounter" delay={0} />
-        <FloatingBadge icon={ScanSearch} label="Investigate" delay={100} />
-        <FloatingBadge icon={ShieldCheck} label="Decide" delay={200} />
-        <FloatingBadge icon={Sparkles} label="Learn" delay={300} />
-      </div>
-
-      <div className="relative w-full flex flex-col items-start gap-2.5 max-w-[280px] mx-auto">
+      <div className="relative w-full flex flex-col items-center gap-2.5 max-w-[280px] mx-auto mt-6">
         {FEATURES.map(({ icon: Icon, text }, i) => (
           <div
             key={text}
-            className="flex items-center gap-2.5 animate-slide-up bg-paper/70 backdrop-blur border border-paper-dim/60 rounded-xl px-3 py-2"
+            className="flex items-center gap-2.5 w-full bg-paper/90 backdrop-blur border border-paper-dim/80 rounded-2xl px-3.5 py-3 shadow-sm text-left animate-slide-up"
             style={{ animationDelay: `${i * 60 + 150}ms`, animationFillMode: "both" }}
           >
-            <div className="w-7 h-7 rounded-lg bg-blue-soft flex items-center justify-center shrink-0">
-              <Icon size={14} className="text-blue" />
+            <div className="w-8 h-8 rounded-xl bg-blue-soft flex items-center justify-center shrink-0">
+              <Icon size={16} className="text-blue" />
             </div>
-            <span className="text-[12.5px] font-semibold text-navy text-left leading-snug">{text}</span>
+            <span className="text-[12.5px] font-bold text-navy leading-snug">{text}</span>
           </div>
         ))}
       </div>

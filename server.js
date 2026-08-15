@@ -9,6 +9,7 @@ import scoreHandler from "./api/score.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+app.get('/health', (_req, res) => res.json({status:'ok', uptime: process.uptime()}));
 
 // Generous limit: chat messages can carry base64-encoded images/PDFs.
 app.use(express.json({ limit: "30mb" }));
