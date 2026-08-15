@@ -29,6 +29,7 @@ async function withOneRetry(fn) {
   try {
     return await fn();
   } catch (e) {
+    if (e.status === 400) throw e; // a validation error won't fix itself on retry
     console.warn("First attempt failed, retrying once:", e);
     await wait(1200);
     return fn();
