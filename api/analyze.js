@@ -17,6 +17,11 @@ Some posts arrive as an attached audio or video clip instead of text. In that ca
 or watch the clip to identify the core claim being made, as if you were transcribing what a viewer
 would take away from it, then investigate that claim exactly as you would a text post.
 
+Some posts have no caption text at all — this is normal for many video posts. When that happens and
+an image is attached, look at the image directly: read any on-screen text, judge what the post is
+actually showing or claiming, and investigate that instead of treating the absence of a caption as
+itself suspicious.
+
 Use Google Search to actually check: who the publisher/account is, whether an original source or
 study exists, whether independent reliable outlets report the same claim, and whether the
 language uses urgency/fear/exaggeration.
@@ -37,6 +42,23 @@ Respond with ONLY a JSON object, no prose outside it, matching exactly this shap
 }`;
 
 const MAX_MEDIA_BYTES = 14 * 1024 * 1024; // stays safely under Gemini's ~20MB inline request limit
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+/** Best-effort: pull a post's preview image server-side and hand it to Gemini as real pixels,
+ * not just a URL. Never throws — returns null on any failure so analysis can proceed without it. */
+async function fetchImageAsInlineData(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const contentType = (res.headers.get("content-type") || "").split(";")[0];
+    if (!contentType.startsWith("image/")) return null;
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > MAX_IMAGE_BYTES) return null;
+    return { mimeType: contentType, data: Buffer.from(buf).toString("base64") };
+  } catch {
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -46,8 +68,11 @@ export default async function handler(req, res) {
 
   const { post } = req.body || {};
   const hasMedia = !!post?.mediaFile?.data;
-  if (!post || (!post.text && !hasMedia)) {
-    res.status(400).json({ error: "Missing post to analyze." });
+  // Only fail if there's truly nothing to investigate. A missing caption alone is common and
+  // fine — the post's image, account, and link are still enough for Scout to work with.
+  const hasAnyContent = post && (post.text || post.title || post.image || post.permalink || hasMedia);
+  if (!hasAnyContent) {
+    res.status(400).json({ error: "There's nothing here for Scout to investigate yet." });
     return;
   }
 
@@ -58,6 +83,10 @@ export default async function handler(req, res) {
       return;
     }
   }
+
+  const captionLine = post?.text
+    ? `Post text / caption: """${post.text}"""`
+    : `Post text / caption: (none found — this post has no caption. If an image is attached below, look at it directly.)`;
 
   const promptText = hasMedia
     ? `Investigate the attached ${post.mediaType || "media"} clip (filename: "${post.mediaFile.name}").
@@ -73,8 +102,8 @@ schema exactly.`
 
 Platform: ${post.platform}
 Author / account: ${post.author}${post.handle ? ` (${post.handle})` : ""}
-Post text / caption: """${post.text}"""
-Original link: ${post.permalink}
+${captionLine}
+Original link: ${post.permalink || "(not available)"}
 
 Answer the six clue questions, then give your overall verdict and confidence, following the JSON
 schema exactly. If you can't verify something even after searching, say so honestly in that
@@ -83,6 +112,9 @@ clue's finding instead of guessing.`;
   const parts = [{ text: promptText }];
   if (hasMedia) {
     parts.push({ inlineData: { mimeType: post.mediaFile.mimeType, data: post.mediaFile.data } });
+  } else if (post.image) {
+    const imagePart = await fetchImageAsInlineData(post.image);
+    if (imagePart) parts.push({ inlineData: imagePart });
   }
 
   try {
@@ -111,8 +143,3 @@ clue's finding instead of guessing.`;
     res.status(status).json({ error: err.message || "Analysis failed." });
   }
 }
-  
-
-  
-
-   
