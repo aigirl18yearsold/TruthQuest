@@ -1,6 +1,7 @@
 import React from "react";
 import { Compass, ArrowRight, MessageSquareText, ShieldCheck, Sparkles, ScanSearch, Globe2 } from "lucide-react";
 import Button from "../ui/Button.jsx";
+import Principles from "./Principles.jsx";
 
 const FEATURES = [
   { icon: MessageSquareText, text: "Real posts from your feed" },
@@ -10,7 +11,7 @@ const FEATURES = [
   { icon: Globe2, text: "Check real sources live" },
 ];
 
-export default function Home({ onStart }) {
+export default function Home({ onStart, onPrinciples }) {
   return (
     <div className="relative flex flex-col h-full px-7 py-10 text-center bg-gradient-to-b from-blue-soft via-blue-soft to-mist overflow-hidden">
       <div className="pointer-events-none select-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-gradient-to-br from-blue/10 to-transparent blur-2xl" />
@@ -55,6 +56,12 @@ export default function Home({ onStart }) {
         <Button onClick={onStart} icon={ArrowRight} variant="navy" className="shadow-lg">
           Start Challenge
         </Button>
+        <button
+          onClick={onPrinciples}
+          className="text-[11px] text-slate-light font-medium underline underline-offset-2 decoration-slate/30 hover:text-blue transition-colors"
+        >
+          TruthQuest Principles
+        </button>
         <span className="text-[11px] text-slate-light font-medium">
           Built for media literacy learners
         </span>
@@ -62,3 +69,4 @@ export default function Home({ onStart }) {
     </div>
   );
 }
+

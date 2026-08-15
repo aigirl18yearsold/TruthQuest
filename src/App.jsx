@@ -4,15 +4,20 @@ import Home from "./components/screens/Home.jsx";
 import LinkEntry from "./components/screens/LinkEntry.jsx";
 import PostReview from "./components/screens/PostReview.jsx";
 import Investigate from "./components/screens/Investigate.jsx";
+import Principles from "./components/screens/Principles.jsx";
+import Reasoning from "./components/screens/Reasoning.jsx";
 import Coach from "./components/screens/Coach.jsx";
 import Results from "./components/screens/Results.jsx";
 import { fetchPost, runAnalysis, getScorecard, fileToPart } from "./lib/api.js";
 import { DEMO_POST, DEMO_ANALYSIS, DEMO_SCORE } from "./data/demoFixtures.js";
 
 const CASE_LABELS = {
+  home: "TruthQuest",
+  principles: "Principles",
   link: "New Case",
   post: "The Post",
   investigate: "Investigation",
+  reasoning: "Your Reasoning",
   coach: "Scout",
   results: "Your Results",
 }; 
@@ -183,7 +188,11 @@ export default function App() {
 
   return (
     <PhoneShell screen={screen} caseLabel={CASE_LABELS[screen]} canGoBack={navStack.length > 0} onBack={goBack}>
-      {screen === "home" && <Home onStart={() => goTo("link")} />}
+      {screen === "home" && (
+        <Home onStart={() => goTo("link")} onPrinciples={() => goTo("principles")} />
+      )}
+
+      {screen === "principles" && <Principles onContinue={() => goBack()} />}
 
       {screen === "link" && (
         <LinkEntry
@@ -206,7 +215,11 @@ export default function App() {
       )}
 
       {screen === "investigate" && analysis && (
-        <Investigate analysis={analysis} demoMode={demoMode} onContinue={() => goTo("coach")} />
+        <Investigate analysis={analysis} demoMode={demoMode} onContinue={() => goTo("reasoning")} />
+      )}
+
+      {screen === "reasoning" && (
+        <Reasoning onContinue={() => goTo("coach")} />
       )}
 
       {screen === "coach" && analysis && (

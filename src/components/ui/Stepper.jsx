@@ -1,11 +1,12 @@
 import React from "react";
 
-export const STEP_SCREEN = ["link", "post", "investigate", "coach", "results"];
+export const STEP_SCREEN = ["link", "post", "investigate", "reasoning", "coach", "results"];
 
 const STEP_LABELS = {
   link: "New",
   post: "Review",
   investigate: "Evidence",
+  reasoning: "Reasoning",
   coach: "Scout",
   results: "Score",
 };

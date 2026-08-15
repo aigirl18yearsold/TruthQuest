@@ -12,7 +12,7 @@ export default function PhoneShell({ screen, caseLabel, canGoBack, onBack, child
           boxShadow: "0 24px 50px -16px rgba(16,27,61,0.25), 0 0 0 1px rgba(255,255,255,0.35) inset",
         }}
       >
-        {screen !== "home" && (
+        {screen !== "home" && screen !== "principles" && (
           <div className="bg-paper/90 backdrop-blur border-b border-paper-dim/60">
             <div className="flex items-center gap-2.5 px-5 pt-5 pb-1">
               {canGoBack ? (
